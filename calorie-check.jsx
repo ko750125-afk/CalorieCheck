@@ -15,14 +15,15 @@ import {
 
 // ---------- Design tokens ----------
 const COLOR = {
-  paper: "#F7F5EF",
-  paperDim: "#EFEBE0",
-  ink: "#22281F",
-  inkDim: "#6B7264",
-  line: "#D8D2C0",
-  turmeric: "#C9891F",
-  brick: "#A6462F",
-  olive: "#4F6B3A",
+  paper: "#FFFDF9",
+  paperDim: "#FFF6ED",
+  ink: "#3A3535",
+  inkDim: "#8C827A",
+  line: "#F2E8DF",
+  turmeric: "#FF922B",
+  brick: "#FF6B6B",
+  olive: "#51CF66",
+  brand: "#FF8E53",
 };
 
 const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap');`;
@@ -522,6 +523,28 @@ export default function CalorieJournal() {
   const [showRefModal, setShowRefModal] = useState(false);
   const [refCat, setRefCat] = useState("all");
   const [refSearch, setRefSearch] = useState("");
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === "accepted") {
+        setDeferredPrompt(null);
+      }
+    } else {
+      alert("📱 [홈 화면에 앱 추가 방법]\n\n1. 아이폰(Safari): 하단 공유 버튼 ➔ [홈 화면에 추가]\n2. 안드로이드(Chrome): 오른쪽 상단 메뉴 ➔ [앱 설치] 또는 [홈 화면에 추가]");
+    }
+  };
   const [searchText, setSearchText] = useState("");
 
   function selectRefFood(item) {
@@ -761,18 +784,32 @@ export default function CalorieJournal() {
           </h1>
           <div style={{ color: COLOR.inkDim, fontSize: "0.8rem" }}>{todayStr()}</div>
         </div>
-        <button
-          onClick={() => setShowProfileForm(true)}
-          style={{
-            fontFamily: "'Jua', sans-serif",
-            border: `1px solid ${COLOR.line}`,
-            background: COLOR.paperDim,
-            color: COLOR.ink,
-          }}
-          className="px-3 py-1.5 text-xs flex items-center gap-1 hover:bg-gray-200 rounded transition-colors"
-        >
-          ⚙️ 프로필 / 목표 설정
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={handleInstallApp}
+            style={{
+              fontFamily: "'Jua', sans-serif",
+              border: `1px solid ${COLOR.brand}`,
+              background: "#FFF0E6",
+              color: COLOR.brand,
+            }}
+            className="px-2.5 py-1.5 text-xs flex items-center gap-1 hover:bg-orange-100 rounded-full transition-all shadow-sm"
+          >
+            📲 앱 설치
+          </button>
+          <button
+            onClick={() => setShowProfileForm(true)}
+            style={{
+              fontFamily: "'Jua', sans-serif",
+              border: `1px solid ${COLOR.line}`,
+              background: COLOR.paperDim,
+              color: COLOR.ink,
+            }}
+            className="px-3 py-1.5 text-xs flex items-center gap-1 hover:bg-amber-100 rounded-full transition-colors"
+          >
+            ⚙️ 프로필 / 목표
+          </button>
+        </div>
       </div>
 
       {/* Profile & Settings Modal */}
