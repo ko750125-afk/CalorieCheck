@@ -531,6 +531,20 @@ export default function CalorieJournal() {
           </div>
         ) : (
           <div className="text-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-semibold text-xs" style={{ color: COLOR.ink }}>프로필 정보 설정</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (profile) setProfileDraft(profile);
+                  setShowProfileForm(false);
+                }}
+                style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
+                className="px-2 py-0.5 hover:opacity-80"
+              >
+                ✕ 닫기
+              </button>
+            </div>
             <div className="flex gap-2 mb-2">
               {[
                 { value: "female", label: "여성" },
@@ -599,7 +613,7 @@ export default function CalorieJournal() {
               ))}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={saveProfile}
                 style={{
@@ -611,17 +625,22 @@ export default function CalorieJournal() {
               >
                 저장하고 목표 계산
               </button>
-              {profile && (
-                <button
-                  onClick={() => {
-                    setProfileDraft(profile);
-                    setShowProfileForm(false);
-                  }}
-                  style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
-                >
-                  취소
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (profile) setProfileDraft(profile);
+                  setShowProfileForm(false);
+                }}
+                style={{
+                  color: COLOR.inkDim,
+                  fontSize: "0.75rem",
+                  border: `1px solid ${COLOR.line}`,
+                  background: "white",
+                }}
+                className="px-3 py-1.5 text-xs hover:bg-gray-50"
+              >
+                닫기 / 취소
+              </button>
             </div>
           </div>
         )}
