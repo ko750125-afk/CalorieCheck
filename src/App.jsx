@@ -684,13 +684,21 @@ export default function CalorieJournal() {
               pointerEvents: "none",
             }}
           >
-            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: "1.5rem", fontWeight: 700 }}>
+            <div
+              style={{
+                fontFamily: "'Oswald', sans-serif",
+                fontSize: "1.8rem",
+                fontWeight: 700,
+                color: COLOR.ink,
+                lineHeight: 1.1,
+              }}
+            >
               {total.toLocaleString()}
             </div>
-            <div style={{ color: COLOR.inkDim, fontSize: "0.7rem" }}>
-              / {goal.toLocaleString()} kcal
+            <div style={{ fontFamily: "'Oswald', sans-serif", color: COLOR.inkDim, fontSize: "0.75rem" }}>
+              kcal
             </div>
-            <div style={{ color: statusColor, fontSize: "0.8rem", fontWeight: 600, marginTop: "2px" }}>
+            <div style={{ color: statusColor, fontSize: "0.75rem", fontWeight: 600, marginTop: "2px" }}>
               {Math.round(ratio * 100)}%
             </div>
           </div>
