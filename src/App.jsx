@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   RadialBarChart,
   RadialBar,
+  PolarAngleAxis,
   BarChart,
   Bar,
   XAxis,
@@ -668,6 +669,7 @@ export default function CalorieJournal() {
               startAngle={90}
               endAngle={-270}
             >
+              <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
               <RadialBar dataKey="value" cornerRadius={0} background={{ fill: COLOR.paperDim }} />
             </RadialBarChart>
           </ResponsiveContainer>
@@ -1038,11 +1040,11 @@ export default function CalorieJournal() {
                   {goal > 0 && (
                     <ReferenceLine
                       y={goal}
-                      stroke={COLOR.brick}
+                      stroke={COLOR.olive}
                       strokeWidth={2}
                       label={{
                         value: `목표 ${goal.toLocaleString()}kcal`,
-                        fill: COLOR.brick,
+                        fill: COLOR.olive,
                         fontSize: 10,
                         position: "top",
                         fontWeight: 600,
