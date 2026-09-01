@@ -522,6 +522,7 @@ export default function CalorieJournal() {
     setEntries(next);
     setInput("");
     setLogSuggestions([]);
+    setIsHalf(false); // 매번 추가 후 기본값(1인분)으로 리셋
     setLoading(false);
     try {
       localStorage.setItem(`foodlog:${selectedDate}`, JSON.stringify(next));
@@ -818,46 +819,14 @@ export default function CalorieJournal() {
 
       {/* Input Mode Selector */}
       <div style={{ borderTop: `1px solid ${COLOR.line}`, borderBottom: `1px solid ${COLOR.line}` }} className="py-4 mb-6">
-        {/* 공통 섭취 분량 선택 탭 */}
-        <div className="flex items-center justify-between mb-3 pb-2.5" style={{ borderBottom: `1px solid ${COLOR.paperDim}` }}>
-          <span style={{ fontSize: "0.75rem", color: COLOR.inkDim, fontWeight: 500 }}>
-            섭취 분량 옵션:
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsHalf(false)}
-              style={{
-                border: `1px solid ${!isHalf ? COLOR.ink : COLOR.line}`,
-                background: !isHalf ? COLOR.ink : "white",
-                color: !isHalf ? COLOR.paper : COLOR.inkDim,
-                fontSize: "0.75rem",
-              }}
-              className="px-3 py-1 font-medium transition-colors"
-            >
-              1인분 / 1개 (100%)
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsHalf(true)}
-              style={{
-                border: `1px solid ${isHalf ? COLOR.brick : COLOR.line}`,
-                background: isHalf ? COLOR.brick : "white",
-                color: isHalf ? COLOR.paper : COLOR.inkDim,
-                fontSize: "0.75rem",
-              }}
-              className="px-3 py-1 font-medium transition-colors"
-            >
-              🥣 1/2량 (50% 칼로리)
-            </button>
-          </div>
-        </div>
-
         {mode === null && (
           <div className="flex items-center gap-2">
             {/* 주 메인 버튼 (Primary CTA) */}
             <button
-              onClick={() => setMode("log")}
+              onClick={() => {
+                setMode("log");
+                setIsHalf(false);
+              }}
               style={{
                 fontFamily: "'Oswald', sans-serif",
                 background: COLOR.ink,
@@ -865,7 +834,7 @@ export default function CalorieJournal() {
               }}
               className="flex-[2.5] py-3 px-4 text-sm font-medium flex items-center justify-center gap-1.5 hover:opacity-90"
             >
-              <span>✏️ 뭐 먹었더라? {isHalf ? "(1/2량)" : ""}</span>
+              <span>✏️ 뭐 먹었더라?</span>
             </button>
 
             {/* 보조 버튼 (Secondary Ghost Button) */}
@@ -874,6 +843,7 @@ export default function CalorieJournal() {
                 setMode("search");
                 setSearchText("");
                 setSearchResult(null);
+                setIsHalf(false);
               }}
               style={{
                 fontFamily: "'Oswald', sans-serif",
@@ -894,10 +864,13 @@ export default function CalorieJournal() {
               <span
                 style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.turmeric }}
               >
-                칼로리만 계산 · 기록되지 않음 {isHalf ? "(1/2량 적용 중)" : ""}
+                칼로리만 계산 · 기록되지 않음
               </span>
               <button
-                onClick={() => setMode(null)}
+                onClick={() => {
+                  setMode(null);
+                  setIsHalf(false);
+                }}
                 style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
                 className="py-1.5 px-1"
               >
@@ -939,7 +912,7 @@ export default function CalorieJournal() {
                         style={{ borderBottom: `1px solid ${COLOR.paperDim}` }}
                         className="w-full flex items-center justify-between px-3 py-1.5 text-sm text-left hover:bg-gray-50"
                       >
-                        <span>{s.name} {isHalf ? "(1/2량)" : ""}</span>
+                        <span>{s.name}</span>
                         <span style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>
                           {isHalf ? Math.round(s.cal * 0.5) : s.cal} kcal
                         </span>
@@ -960,6 +933,23 @@ export default function CalorieJournal() {
               >
                 {searchLoading ? "확인 중…" : "검색"}
               </button>
+            </div>
+            {/* 음식을 고른 후 체크하는 1/2량 옵션 */}
+            <div className="mt-2.5 flex items-center justify-between">
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+                <input
+                  type="checkbox"
+                  checked={isHalf}
+                  onChange={(e) => setIsHalf(e.target.checked)}
+                  className="w-4 h-4 accent-amber-600 rounded"
+                />
+                <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
+                  🥣 1/2량 섭취 (50% 칼로리로 계산)
+                </span>
+              </label>
+              <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
+                {isHalf ? "50% 적용 중" : "기본 1인분"}
+              </span>
             </div>
             {searchResult && (
               <div
@@ -986,10 +976,13 @@ export default function CalorieJournal() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}>
-                식사 기록하기 {isHalf ? "(1/2량 적용 중)" : ""}
+                식사 기록하기
               </span>
               <button
-                onClick={() => setMode(null)}
+                onClick={() => {
+                  setMode(null);
+                  setIsHalf(false);
+                }}
                 style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
                 className="py-1.5 px-1"
               >
@@ -1059,6 +1052,23 @@ export default function CalorieJournal() {
               >
                 {loading ? "계산 중…" : "추가"}
               </button>
+            </div>
+            {/* 음식을 고른 후 체크하는 1/2량 옵션 */}
+            <div className="mt-2.5 flex items-center justify-between">
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+                <input
+                  type="checkbox"
+                  checked={isHalf}
+                  onChange={(e) => setIsHalf(e.target.checked)}
+                  className="w-4 h-4 accent-amber-600 rounded"
+                />
+                <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
+                  🥣 1/2량 섭취 (50% 칼로리로 계산)
+                </span>
+              </label>
+              <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
+                {isHalf ? "50% 적용 중" : "기본 1인분"}
+              </span>
             </div>
           </div>
         )}
