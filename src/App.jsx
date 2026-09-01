@@ -406,6 +406,7 @@ export default function CalorieJournal() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [logSuggestions, setLogSuggestions] = useState([]);
+  const [showWeekly, setShowWeekly] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -620,121 +621,88 @@ export default function CalorieJournal() {
       className="w-full max-w-2xl mx-auto p-4 md:p-6"
     >
       {/* Header */}
-      <div style={{ borderBottom: `3px solid ${COLOR.ink}` }} className="pb-2 mb-1">
-        <h1
+      <div style={{ borderBottom: `3px solid ${COLOR.ink}` }} className="pb-2 mb-4 flex items-center justify-between">
+        <div>
+          <h1
+            style={{
+              fontFamily: "'Jua', sans-serif",
+              letterSpacing: "0.02em",
+            }}
+            className="text-2xl font-semibold leading-tight"
+          >
+            Calorie Diary
+          </h1>
+          <div style={{ color: COLOR.inkDim, fontSize: "0.8rem" }}>{todayStr()}</div>
+        </div>
+        <button
+          onClick={() => setShowProfileForm(true)}
           style={{
             fontFamily: "'Jua', sans-serif",
-            letterSpacing: "0.02em",
+            border: `1px solid ${COLOR.line}`,
+            background: COLOR.paperDim,
+            color: COLOR.ink,
           }}
-          className="text-2xl font-semibold"
+          className="px-3 py-1.5 text-xs flex items-center gap-1 hover:bg-gray-200 rounded transition-colors"
         >
-          Calorie Diary
-        </h1>
-        <div className="flex items-center justify-between mt-1">
-          <span style={{ color: COLOR.inkDim, fontSize: "0.85rem" }}>{todayStr()}</span>
-        </div>
+          ⚙️ 프로필 / 목표 설정
+        </button>
       </div>
-      <div style={{ borderBottom: `1px solid ${COLOR.line}` }} className="mb-5" />
 
-      {/* Profile & BMI card */}
-      <div style={{ borderBottom: `1px solid ${COLOR.line}` }} className="pb-4 mb-5">
-        {!showProfileForm ? (
-          <div className="text-sm">
-            {profile && goalInfo ? (
-              <div>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 mb-1">
-                      <span>
-                        <span style={{ color: COLOR.inkDim }}>신체 </span>
-                        {profile.gender === "male" ? "남성" : "여성"} {profile.age}세 · {profile.height}cm · {profile.currentWeight}kg
-                      </span>
-                      <span>
-                        <span style={{ color: COLOR.inkDim }}>BMI </span>
-                        <span style={{ color: bmiCat.color, fontWeight: 600 }}>
-                          {bmi ? bmi.toFixed(1) : "-"} {bmiCat.label}
-                        </span>
-                      </span>
-                    </div>
-                    <div style={{ color: COLOR.inkDim, fontSize: "0.8rem" }}>
-                      목표 {profile.targetWeight}kg ({goalInfo.mode})
-                      {goalInfo.weeks > 0 && <> · 약 {goalInfo.weeks}주 소요 예상</>}
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <div
-                      style={{ fontFamily: "'Jua', sans-serif", fontWeight: 700 }}
-                      className="text-lg"
-                    >
-                      {goal.toLocaleString()} kcal
-                    </div>
-                    <button
-                      onClick={() => setShowProfileForm(true)}
-                      style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
-                      className="py-1"
-                    >
-                      프로필 수정 ✎
-                    </button>
-                  </div>
-                </div>
-
-                {/* 활동량 및 칼로리 수치 산출 내역 박스 */}
-                <div
-                  style={{ border: `1px solid ${COLOR.line}`, background: COLOR.paperDim }}
-                  className="p-2.5 mt-2 rounded text-xs grid grid-cols-2 md:grid-cols-4 gap-2 text-center"
-                >
-                  <div>
-                    <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>기초대사량 (BMR)</div>
-                    <div className="font-semibold">{goalInfo.bmr.toLocaleString()} kcal</div>
-                  </div>
-                  <div>
-                    <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동 계수 (선택)</div>
-                    <div className="font-semibold text-amber-700">x {goalInfo.activityMult}배</div>
-                  </div>
-                  <div>
-                    <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동소비 (TDEE)</div>
-                    <div className="font-semibold">{goalInfo.tdee.toLocaleString()} kcal</div>
-                  </div>
-                  <div>
-                    <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>최종 목표 칼로리</div>
-                    <div className="font-semibold text-emerald-700">
-                      {goalInfo.goalCal.toLocaleString()} kcal ({goalInfo.adjustment >= 0 ? `+${goalInfo.adjustment}` : goalInfo.adjustment})
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <span style={{ color: COLOR.inkDim }}>
-                  프로필을 입력하면 BMR 및 활동량에 따른 목표 칼로리가 자동 계산됩니다
-                </span>
-                <button
-                  onClick={() => setShowProfileForm(true)}
-                  style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
-                  className="py-1.5 px-2 border"
-                >
-                  프로필 입력하기 ✎
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-xs" style={{ color: COLOR.ink }}>프로필 정보 설정</span>
+      {/* Profile & Settings Modal */}
+      {showProfileForm && (
+        <div
+          style={{ background: "rgba(0, 0, 0, 0.4)" }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <div
+            style={{ background: COLOR.paper, border: `2px solid ${COLOR.ink}` }}
+            className="w-full max-w-md p-5 rounded-lg shadow-xl max-h-[90vh] overflow-y-auto text-sm"
+          >
+            <div className="flex items-center justify-between border-b pb-2 mb-3">
+              <span className="font-semibold text-base" style={{ color: COLOR.ink }}>
+                ⚙️ 프로필 & 목표 설정
+              </span>
               <button
                 type="button"
                 onClick={() => {
                   if (profile) setProfileDraft(profile);
                   setShowProfileForm(false);
                 }}
-                style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
-                className="px-2 py-0.5 hover:opacity-80"
+                style={{ color: COLOR.inkDim, fontSize: "0.9rem" }}
+                className="px-2 py-0.5 hover:opacity-80 font-bold"
               >
-                ✕ 닫기
+                ✕
               </button>
             </div>
-            <div className="flex gap-2 mb-2">
+
+            {/* 현재 프로필 수치 요약 */}
+            {profile && goalInfo && (
+              <div
+                style={{ border: `1px solid ${COLOR.line}`, background: COLOR.paperDim }}
+                className="p-3 mb-4 rounded text-xs grid grid-cols-2 md:grid-cols-4 gap-2 text-center"
+              >
+                <div>
+                  <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>기초대사량 (BMR)</div>
+                  <div className="font-semibold">{goalInfo.bmr.toLocaleString()} kcal</div>
+                </div>
+                <div>
+                  <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동 계수</div>
+                  <div className="font-semibold text-amber-700">x {goalInfo.activityMult}배</div>
+                </div>
+                <div>
+                  <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동소비 (TDEE)</div>
+                  <div className="font-semibold">{goalInfo.tdee.toLocaleString()} kcal</div>
+                </div>
+                <div>
+                  <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>목표 칼로리</div>
+                  <div className="font-semibold text-emerald-700">
+                    {goalInfo.goalCal.toLocaleString()} kcal
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 mb-3">
               {[
                 { value: "female", label: "여성" },
                 { value: "male", label: "남성" },
@@ -744,29 +712,29 @@ export default function CalorieJournal() {
                   onClick={() => setProfileDraft({ ...profileDraft, gender: g.value })}
                   style={{
                     fontFamily: "'Jua', sans-serif",
-                    fontSize: "0.75rem",
+                    fontSize: "0.8rem",
                     border: `1px solid ${
                       profileDraft.gender === g.value ? COLOR.ink : COLOR.line
                     }`,
                     background: profileDraft.gender === g.value ? COLOR.ink : "transparent",
                     color: profileDraft.gender === g.value ? COLOR.paper : COLOR.inkDim,
                   }}
-                  className="px-3 py-1"
+                  className="flex-1 py-1.5 rounded"
                 >
                   {g.label}
                 </button>
               ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="grid grid-cols-2 gap-2 mb-3">
               {[
                 { key: "age", label: "나이" },
-                { key: "height", label: "키(cm)" },
-                { key: "currentWeight", label: "현재체중(kg)" },
-                { key: "targetWeight", label: "목표체중(kg)" },
+                { key: "height", label: "키 (cm)" },
+                { key: "currentWeight", label: "현재 체중 (kg)" },
+                { key: "targetWeight", label: "목표 체중 (kg)" },
               ].map((f) => (
                 <label key={f.key} className="block">
-                  <span style={{ color: COLOR.inkDim, fontSize: "0.7rem" }}>{f.label}</span>
+                  <span style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>{f.label}</span>
                   <input
                     type="number"
                     value={profileDraft[f.key]}
@@ -774,46 +742,55 @@ export default function CalorieJournal() {
                       setProfileDraft({ ...profileDraft, [f.key]: e.target.value })
                     }
                     style={{ border: `1px solid ${COLOR.line}`, background: "white", fontSize: "16px" }}
-                    className="w-full px-2 py-1.5 mt-0.5"
+                    className="w-full px-2 py-1.5 mt-0.5 rounded"
                   />
                 </label>
               ))}
             </div>
 
-            <span style={{ color: COLOR.inkDim, fontSize: "0.7rem" }}>활동량 선택 (활동 계수 반영)</span>
-            <div className="flex flex-wrap gap-2 mt-1 mb-3">
+            <span style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>활동량 선택 (활동 계수 반영)</span>
+            <div className="grid grid-cols-2 gap-1.5 mt-1 mb-4">
               {ACTIVITY_LEVELS.map((a) => (
                 <button
                   key={a.value}
                   onClick={() => setProfileDraft({ ...profileDraft, activity: a.value })}
                   style={{
                     fontFamily: "'Jua', sans-serif",
-                    fontSize: "0.7rem",
+                    fontSize: "0.75rem",
                     border: `1px solid ${
                       profileDraft.activity === a.value ? COLOR.ink : COLOR.line
                     }`,
                     background: profileDraft.activity === a.value ? COLOR.ink : "transparent",
                     color: profileDraft.activity === a.value ? COLOR.paper : COLOR.inkDim,
                   }}
-                  className="px-2 py-1"
+                  className="px-2 py-1.5 text-center rounded"
                 >
                   {a.label}
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={saveProfile}
-                style={{
-                  fontFamily: "'Jua', sans-serif",
-                  background: COLOR.ink,
-                  color: COLOR.paper,
-                }}
-                className="px-4 py-1.5 text-xs"
-              >
-                저장하고 목표 계산
-              </button>
+            {/* 실시간 계산 미리보기 박스 */}
+            {(() => {
+              const draftCalc = calcGoalCalories(profileDraft);
+              if (!draftCalc) return null;
+              return (
+                <div
+                  style={{ border: `1px dashed ${COLOR.line}`, background: "#F8F9FA" }}
+                  className="p-2.5 mb-4 text-xs rounded"
+                >
+                  <div className="font-semibold mb-1 text-slate-700">📊 계산 결과 미리보기:</div>
+                  <div className="grid grid-cols-2 gap-1 text-slate-600">
+                    <div>기초대사량: <b>{draftCalc.bmr.toLocaleString()} kcal</b></div>
+                    <div>활동계수: <b className="text-amber-600">x {draftCalc.activityMult}배</b></div>
+                    <div>일일소비: <b>{draftCalc.tdee.toLocaleString()} kcal</b></div>
+                    <div>목표: <b className="text-emerald-600">{draftCalc.goalCal.toLocaleString()} kcal</b></div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t">
               <button
                 type="button"
                 onClick={() => {
@@ -822,19 +799,31 @@ export default function CalorieJournal() {
                 }}
                 style={{
                   color: COLOR.inkDim,
-                  fontSize: "0.75rem",
+                  fontSize: "0.8rem",
                   border: `1px solid ${COLOR.line}`,
-                  background: "white",
                 }}
-                className="px-3 py-1.5 text-xs hover:bg-gray-50"
+                className="px-3 py-1.5 rounded hover:bg-gray-100"
               >
                 닫기 / 취소
               </button>
+              <button
+                onClick={() => {
+                  saveProfile();
+                  setShowProfileForm(false);
+                }}
+                style={{
+                  fontFamily: "'Jua', sans-serif",
+                  background: COLOR.ink,
+                  color: COLOR.paper,
+                }}
+                className="px-4 py-1.5 text-xs rounded font-medium"
+              >
+                저장하고 적용
+              </button>
             </div>
           </div>
-        )}
-      </div>
-
+        </div>
+      )}
       {/* Hero gauge */}
       <div className="flex items-center gap-4 mb-2">
         <div style={{ width: 130, height: 130, position: "relative", flexShrink: 0 }}>
@@ -1312,92 +1301,112 @@ export default function CalorieJournal() {
         )}
       </div>
 
-      {/* Weekly chart */}
-      {(() => {
-        const maxCalorieInWeekly = Math.max(...weekly.map((d) => d.calories || 0), 0);
-        const yMax = Math.ceil(Math.max(maxCalorieInWeekly, goal || 2000) * 1.15);
-        return (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div
-                style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
-              >
-                최근 7일 추이
-              </div>
-              <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
-                💡 막대를 클릭하여 해당 날짜 기록 확인
-              </span>
-            </div>
-            <div style={{ width: "100%", height: 170 }}>
-              <ResponsiveContainer>
-                <BarChart
-                  data={weekly}
-                  margin={{ top: 16, right: 4, left: -15, bottom: 0 }}
-                  onClick={(state) => {
-                    if (state && state.activePayload && state.activePayload.length) {
-                      const targetDate = state.activePayload[0].payload.date;
-                      if (targetDate) selectDate(targetDate);
-                    }
-                  }}
-                >
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fontSize: 11, fill: COLOR.inkDim }}
-                    axisLine={{ stroke: COLOR.line }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    domain={[0, yMax]}
-                    tick={{ fontSize: 10, fill: COLOR.inkDim }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: COLOR.paper,
-                      border: `1px solid ${COLOR.line}`,
-                      fontSize: "0.8rem",
-                    }}
-                  />
-                  {goal > 0 && (
-                    <ReferenceLine
-                      y={goal}
-                      stroke={COLOR.olive}
-                      strokeWidth={2}
-                      label={{
-                        value: `목표 ${goal.toLocaleString()}kcal`,
-                        fill: COLOR.olive,
-                        fontSize: 10,
-                        position: "top",
-                        fontWeight: 600,
-                      }}
-                    />
-                  )}
-                  <Bar dataKey="calories" radius={[2, 2, 0, 0]}>
-                    {weekly.map((d, i) => {
-                      const isSelected = d.date === selectedDate;
-                      return (
-                        <Cell
-                          key={i}
-                          cursor="pointer"
-                          onClick={() => selectDate(d.date)}
-                          stroke={isSelected ? COLOR.ink : "none"}
-                          strokeWidth={isSelected ? 2 : 0}
-                          fill={
-                            isSelected
-                              ? (d.calories > goal ? "#B91C1C" : COLOR.ink)
-                              : (d.calories > goal ? COLOR.brick : COLOR.turmeric)
+      {/* Weekly chart (Collapsible Accordion) */}
+      <div style={{ borderTop: `1px solid ${COLOR.line}` }} className="pt-4 mt-6">
+        <button
+          onClick={() => setShowWeekly(!showWeekly)}
+          style={{
+            fontFamily: "'Jua', sans-serif",
+            background: COLOR.paperDim,
+            border: `1px solid ${COLOR.line}`,
+            color: COLOR.ink,
+          }}
+          className="w-full py-2.5 px-4 text-xs font-medium flex items-center justify-between rounded hover:bg-gray-200 transition-colors"
+        >
+          <span>📊 최근 7일 섭취 추이 그래프</span>
+          <span>{showWeekly ? "▴ 접기" : "▾ 펼쳐보기"}</span>
+        </button>
+
+        {showWeekly && (
+          <div className="mt-3 p-3 border rounded bg-white">
+            {(() => {
+              const maxCalorieInWeekly = Math.max(...weekly.map((d) => d.calories || 0), 0);
+              const yMax = Math.ceil(Math.max(maxCalorieInWeekly, goal || 2000) * 1.15);
+              return (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div
+                      style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
+                    >
+                      최근 7일 추이
+                    </div>
+                    <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
+                      💡 막대를 클릭하여 해당 날짜 기록 확인
+                    </span>
+                  </div>
+                  <div style={{ width: "100%", height: 170 }}>
+                    <ResponsiveContainer>
+                      <BarChart
+                        data={weekly}
+                        margin={{ top: 16, right: 4, left: -15, bottom: 0 }}
+                        onClick={(state) => {
+                          if (state && state.activePayload && state.activePayload.length) {
+                            const targetDate = state.activePayload[0].payload.date;
+                            if (targetDate) selectDate(targetDate);
                           }
+                        }}
+                      >
+                        <XAxis
+                          dataKey="label"
+                          tick={{ fontSize: 11, fill: COLOR.inkDim }}
+                          axisLine={{ stroke: COLOR.line }}
+                          tickLine={false}
                         />
-                      );
-                    })}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+                        <YAxis
+                          domain={[0, yMax]}
+                          tick={{ fontSize: 10, fill: COLOR.inkDim }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            background: COLOR.paper,
+                            border: `1px solid ${COLOR.line}`,
+                            fontSize: "0.8rem",
+                          }}
+                        />
+                        {goal > 0 && (
+                          <ReferenceLine
+                            y={goal}
+                            stroke={COLOR.olive}
+                            strokeWidth={2}
+                            label={{
+                              value: `목표 ${goal.toLocaleString()}kcal`,
+                              fill: COLOR.olive,
+                              fontSize: 10,
+                              position: "top",
+                              fontWeight: 600,
+                            }}
+                          />
+                        )}
+                        <Bar dataKey="calories" radius={[2, 2, 0, 0]}>
+                          {weekly.map((d, i) => {
+                            const isSelected = d.date === selectedDate;
+                            return (
+                              <Cell
+                                key={i}
+                                cursor="pointer"
+                                onClick={() => selectDate(d.date)}
+                                stroke={isSelected ? COLOR.ink : "none"}
+                                strokeWidth={isSelected ? 2 : 0}
+                                fill={
+                                  isSelected
+                                    ? (d.calories > goal ? "#B91C1C" : COLOR.ink)
+                                    : (d.calories > goal ? COLOR.brick : COLOR.turmeric)
+                                }
+                              />
+                            );
+                          })}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
-        );
-      })()}
+        )}
+      </div>
     </div>
   );
 }
