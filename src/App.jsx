@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import {
   RadialBarChart,
   RadialBar,
@@ -508,456 +508,346 @@ function generateDummyDayEntries(dateStr, seed) {
   });
 }
 
-export default function CalorieJournal() {
-  const [selectedDate, setSelectedDate] = useState(todayStr());
-  const [isHalf, setIsHalf] = useState(false);
-  const [profile, setProfile] = useState(null);
-  const [profileDraft, setProfileDraft] = useState(DEFAULT_PROFILE);
-  const [showProfileForm, setShowProfileForm] = useState(false);
-  const [entries, setEntries] = useState([]);
-  const [weekly, setWeekly] = useState([]);
-  const [input, setInput] = useState("");
-  // meal은 더 이상 수동 선택하지 않고 입력 시각 기준으로 자동 결정됨
-  const [mode, setMode] = useState(null); // null | 'search' | 'log' | 'manual'
-  const [manualName, setManualName] = useState("");
-  const [manualCal, setManualCal] = useState("");
-  const [showRefModal, setShowRefModal] = useState(false);
-  const [refCat, setRefCat] = useState("all");
-  const [refSearch, setRefSearch] = useState("");
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+// ==========================================
+// 🧩 Sub UI Components (논리적 컴포넌트 분할)
+// ==========================================
 
-  useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+function Header({ todayStr, onInstallApp, onShowProfile }) {
+  return (
+    <div style={{ borderBottom: `3px solid ${COLOR.ink}` }} className="pb-2 mb-4 flex items-center justify-between">
+      <div>
+        <h1 style={{ fontFamily: "'Jua', sans-serif", letterSpacing: "0.02em" }} className="text-2xl font-semibold leading-tight">
+          Calorie Diary
+        </h1>
+        <div style={{ color: COLOR.inkDim, fontSize: "0.8rem" }}>{todayStr}</div>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={onInstallApp}
+          style={{ fontFamily: "'Jua', sans-serif", border: `1px solid ${COLOR.brand}`, background: "#FFF0E6", color: COLOR.brand }}
+          className="px-2.5 py-1.5 text-xs flex items-center gap-1 hover:bg-orange-100 rounded-full transition-all shadow-sm"
+        >
+          📲 앱 설치
+        </button>
+        <button
+          onClick={onShowProfile}
+          style={{ fontFamily: "'Jua', sans-serif", border: `1px solid ${COLOR.line}`, background: COLOR.paperDim, color: COLOR.ink }}
+          className="px-3 py-1.5 text-xs flex items-center gap-1 hover:bg-amber-100 rounded-full transition-colors"
+        >
+          ⚙️ 프로필 / 목표
+        </button>
+      </div>
+    </div>
+  );
+}
 
-  const handleInstallApp = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      if (choiceResult.outcome === "accepted") {
-        setDeferredPrompt(null);
-      }
-    } else {
-      alert(
-        "📱 [스마트폰 홈 화면에 앱 바로가기/설치 안내]\n\n" +
-        "🤖 안드로이드 (카카오톡 등으로 접속 시):\n" +
-        "1. 오른쪽 아래 메뉴(⋮ 또는 ⋯) ➔ [다른 브라우저로 열기] 선택\n" +
-        "2. 오른쪽 상단 메뉴(⋮) ➔ [설치 및 바로가기 만들기] 클릭!\n\n" +
-        "🍎 아이폰 (Safari):\n" +
-        "하단 공유 버튼 ➔ [홈 화면에 추가] 클릭!"
-      );
-    }
-  };
-  const [searchText, setSearchText] = useState("");
-  const [searchResult, setSearchResult] = useState(null);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchSuggestions, setSearchSuggestions] = useState([]);
-  const [logSuggestions, setLogSuggestions] = useState([]);
-  const [showWeekly, setShowWeekly] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
-
-  const loadEntriesForDate = useCallback((ds) => {
-    try {
-      const raw = localStorage.getItem(`foodlog:${ds}`);
-      setEntries(raw ? JSON.parse(raw) : []);
-    } catch {
-      setEntries([]);
-    }
-  }, []);
-
-  const selectDate = useCallback((ds) => {
-    setSelectedDate(ds);
-    loadEntriesForDate(ds);
-  }, [loadEntriesForDate]);
-
-  const loadToday = useCallback(async () => {
-    loadEntriesForDate(selectedDate);
-  }, [loadEntriesForDate, selectedDate]);
-
-  const loadWeekly = useCallback(async () => {
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const ds = dateStrOffset(i);
-      let sum = 0;
-      try {
-        const raw = localStorage.getItem(`foodlog:${ds}`);
-        if (raw) {
-          const arr = JSON.parse(raw);
-          sum = arr.reduce((s, e) => s + e.calories, 0);
-        }
-      } catch {
-        sum = 0;
-      }
-      const d = new Date(ds);
-      const label = `${d.getMonth() + 1}/${d.getDate()}`;
-      days.push({ date: ds, label, calories: sum });
-    }
-    setWeekly(days);
-  }, []);
-
-  const loadProfile = useCallback(async () => {
-    try {
-      const raw = localStorage.getItem("profile");
-      if (raw) {
-        const p = JSON.parse(raw);
-        setProfile(p);
-        setProfileDraft(p);
-      } else {
-        setShowProfileForm(true);
-      }
-    } catch {
-      setShowProfileForm(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      await Promise.all([loadToday(), loadWeekly(), loadProfile()]);
-      setReady(true);
-    })();
-  }, [loadToday, loadWeekly, loadProfile]);
-
-  async function saveProfile() {
-    setProfile(profileDraft);
-    setShowProfileForm(false);
-    try {
-      localStorage.setItem("profile", JSON.stringify(profileDraft));
-    } catch {
-      // ignore save failure, UI already updated
-    }
-  }
-
-  function selectRefFood(item) {
-    if (mode === "manual") {
-      setManualName(item.name);
-      setManualCal(String(item.cal));
-    } else {
-      setSearchText(item.name);
-      const finalCal = isHalf ? Math.round(item.cal * 0.5) : item.cal;
-      const finalName = isHalf ? `${item.name} (1/2)` : item.name;
-      setSearchResult({ name: finalName, calories: finalCal, source: "db" });
-    }
-    setShowRefModal(false);
-  }
-
-
-
-  async function doSearch() {
-    if (!searchText.trim() || searchLoading) return;
-    setSearchLoading(true);
-    setSearchResult(null);
-    let result = matchLocalFood(searchText);
-    if (!result) {
-      result = await estimateWithAI(searchText);
-    }
-    if (isHalf) {
-      result = {
-        ...result,
-        name: `${result.name} (1/2)`,
-        calories: Math.round(result.calories * 0.5),
-      };
-    }
-    setSearchResult(result);
-    setSearchLoading(false);
-  }
-
-  async function addEntry() {
-    if (!input.trim() || loading) return;
-    setLoading(true);
-    let result = matchLocalFood(input);
-    if (!result) {
-      result = await estimateWithAI(input);
-    }
-    let finalCal = result.calories;
-    let finalName = result.name;
-    if (isHalf) {
-      finalCal = Math.round(finalCal * 0.5);
-      finalName = `${finalName} (1/2)`;
-    }
-    const now = new Date();
-    const entry = {
-      id: Date.now(),
-      name: finalName,
-      calories: finalCal,
-      meal: getAutoMeal(now),
-      source: result.source,
-      time: now.toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-    const next = [...entries, entry];
-    setEntries(next);
-    setInput("");
-    setLogSuggestions([]);
-    setIsHalf(false); // 매번 추가 후 기본값(1인분)으로 리셋
-    setLoading(false);
-    try {
-      localStorage.setItem(`foodlog:${selectedDate}`, JSON.stringify(next));
-    } catch {
-      // storage failed, keep in-memory state
-    }
-    loadWeekly();
-  }
-
-  async function addManualEntry() {
-    if (!manualName.trim() || !manualCal) return;
-    const rawCal = Number(manualCal);
-    if (isNaN(rawCal) || rawCal <= 0) return;
-
-    let finalCal = Math.round(rawCal);
-    let finalName = manualName.trim();
-    if (isHalf) {
-      finalCal = Math.round(finalCal * 0.5);
-      finalName = `${finalName} (1/2)`;
-    }
-
-    const now = new Date();
-    const entry = {
-      id: Date.now(),
-      name: finalName,
-      calories: finalCal,
-      meal: getAutoMeal(now),
-      source: "manual",
-      time: now.toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-    const next = [...entries, entry];
-    setEntries(next);
-    setManualName("");
-    setManualCal("");
-    setIsHalf(false);
-    setMode(null);
-    try {
-      localStorage.setItem(`foodlog:${selectedDate}`, JSON.stringify(next));
-    } catch {
-      // storage failed, keep state
-    }
-    loadWeekly();
-  }
-
-  async function deleteEntry(id) {
-    const next = entries.filter((e) => e.id !== id);
-    setEntries(next);
-    try {
-      localStorage.setItem(`foodlog:${selectedDate}`, JSON.stringify(next));
-    } catch {
-      // storage failed, keep in-memory state
-    }
-    loadWeekly();
-  }
-
-  const goalInfo = profile ? calcGoalCalories(profile) : null;
-  const goal = goalInfo ? goalInfo.goalCal : 2000;
-  const bmi = profile ? calcBMI(profile.height, profile.currentWeight) : null;
-  const bmiCat = bmiCategory(bmi);
-
-  const total = entries.reduce((s, e) => s + e.calories, 0);
+function HeroGauge({ total, goal }) {
   const ratio = goal > 0 ? total / goal : 0;
-  const statusColor =
-    ratio > 1.05 ? COLOR.brick : ratio > 0.85 ? COLOR.turmeric : COLOR.olive;
-  const statusLabel =
-    ratio > 1.05 ? "목표 초과" : ratio > 0.85 ? "목표 근접" : "여유 있음";
-
-  const gaugeData = [
-    {
-      name: "consumed",
-      value: Math.min(ratio * 100, 100),
-      fill: statusColor,
-    },
-  ];
+  const statusColor = ratio > 1.05 ? COLOR.brick : ratio > 0.85 ? COLOR.turmeric : COLOR.olive;
+  const statusLabel = ratio > 1.05 ? "목표 초과" : ratio > 0.85 ? "목표 근접" : "여유 있음";
+  const gaugeData = [{ name: "consumed", value: Math.min(ratio * 100, 100), fill: statusColor }];
 
   return (
-    <div
-      style={{
-        background: COLOR.paper,
-        color: COLOR.ink,
-        minHeight: "100%",
-        fontFamily: "'Jua', 'Gowun Dodum', sans-serif",
-      }}
-      className="w-full max-w-2xl mx-auto p-4 md:p-6"
-    >
-      {/* Header */}
-      <div style={{ borderBottom: `3px solid ${COLOR.ink}` }} className="pb-2 mb-4 flex items-center justify-between">
-        <div>
-          <h1
-            style={{
-              fontFamily: "'Jua', sans-serif",
-              letterSpacing: "0.02em",
-            }}
-            className="text-2xl font-semibold leading-tight"
-          >
-            Calorie Diary
-          </h1>
-          <div style={{ color: COLOR.inkDim, fontSize: "0.8rem" }}>{todayStr()}</div>
+    <>
+      <div className="flex items-center gap-4 mb-2">
+        <div style={{ width: 130, height: 130, position: "relative", flexShrink: 0 }}>
+          <ResponsiveContainer>
+            <RadialBarChart innerRadius="72%" outerRadius="100%" data={gaugeData} startAngle={90} endAngle={-270}>
+              <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+              <RadialBar dataKey="value" cornerRadius={0} background={{ fill: COLOR.paperDim }} />
+            </RadialBarChart>
+          </ResponsiveContainer>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+            <div style={{ fontFamily: "'Jua', sans-serif", fontSize: "1.35rem", fontWeight: 700, color: COLOR.ink, lineHeight: 1.05 }}>
+              {total.toLocaleString()}
+            </div>
+            <div style={{ fontFamily: "'Jua', sans-serif", color: COLOR.inkDim, fontSize: "0.65rem" }}>kcal</div>
+            <div style={{ color: statusColor, fontSize: "0.7rem", fontWeight: 600, marginTop: "1px" }}>
+              {Math.round(ratio * 100)}%
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={handleInstallApp}
-            style={{
-              fontFamily: "'Jua', sans-serif",
-              border: `1px solid ${COLOR.brand}`,
-              background: "#FFF0E6",
-              color: COLOR.brand,
-            }}
-            className="px-2.5 py-1.5 text-xs flex items-center gap-1 hover:bg-orange-100 rounded-full transition-all shadow-sm"
-          >
-            📲 앱 설치
-          </button>
-          <button
-            onClick={() => setShowProfileForm(true)}
-            style={{
-              fontFamily: "'Jua', sans-serif",
-              border: `1px solid ${COLOR.line}`,
-              background: COLOR.paperDim,
-              color: COLOR.ink,
-            }}
-            className="px-3 py-1.5 text-xs flex items-center gap-1 hover:bg-amber-100 rounded-full transition-colors"
-          >
-            ⚙️ 프로필 / 목표
-          </button>
+        <div className="flex-1 min-w-0">
+          <div style={{ color: statusColor, fontFamily: "'Jua', sans-serif", fontWeight: 600 }} className="text-lg">
+            {statusLabel}
+          </div>
+          <div style={{ color: COLOR.inkDim, fontSize: "0.85rem" }}>
+            {goal - total >= 0 ? `${(goal - total).toLocaleString()} kcal 더 섭취 가능` : `${(total - goal).toLocaleString()} kcal 초과`}
+          </div>
         </div>
       </div>
+      <div style={{ color: COLOR.inkDim, fontSize: "0.75rem", lineHeight: 1.5 }} className="mb-6">
+        <div>오늘 섭취 {total.toLocaleString()}kcal ÷ 목표 {goal.toLocaleString()}kcal 기준</div>
+        <div style={{ fontSize: "0.7rem", opacity: 0.85 }} className="mt-0.5">
+          · 85% 미만 여유있음 · 85~105% 목표 근접 · 105% 초과 시 초과
+        </div>
+      </div>
+    </>
+  );
+}
 
-      {/* Profile & Settings Modal */}
-      {showProfileForm && (
-        <div
-          style={{ background: "rgba(0, 0, 0, 0.4)" }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        >
-          <div
-            style={{ background: COLOR.paper, border: `2px solid ${COLOR.ink}` }}
-            className="w-full max-w-md p-5 rounded-lg shadow-xl max-h-[90vh] overflow-y-auto text-sm"
-          >
-            <div className="flex items-center justify-between border-b pb-2 mb-3">
-              <span className="font-semibold text-base" style={{ color: COLOR.ink }}>
-                ⚙️ 프로필 & 목표 설정
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  if (profile) setProfileDraft(profile);
-                  setShowProfileForm(false);
-                }}
-                style={{ color: COLOR.inkDim, fontSize: "0.9rem" }}
-                className="px-2 py-0.5 hover:opacity-80 font-bold"
-              >
-                ✕
-              </button>
+function LogList({ entries, selectedDate, ready, todayString, onSelectDate, onDeleteEntry }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-2">
+        <div style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.ink }} className="font-semibold">
+          {selectedDate === todayString ? "오늘 기록" : `${selectedDate} 기록`} ({entries.length})
+        </div>
+        {selectedDate !== todayString && (
+          <button onClick={() => onSelectDate(todayString)} style={{ color: COLOR.olive, fontSize: "0.75rem" }} className="font-semibold underline hover:opacity-80">
+            오늘로 돌아가기 ↩
+          </button>
+        )}
+      </div>
+      {entries.length === 0 && !ready ? null : entries.length === 0 ? (
+        <div style={{ color: COLOR.inkDim, fontSize: "0.85rem" }} className="py-4">
+          {selectedDate === todayString ? "아직 기록이 없습니다. 위에서 먹은 음식을 입력해보세요." : `${selectedDate}에 등록된 식사 기록이 없습니다.`}
+        </div>
+      ) : (
+        <div>
+          {entries.map((e) => (
+            <div key={e.id} style={{ borderBottom: `1px solid ${COLOR.line}` }} className="flex items-center justify-between py-2 text-sm">
+              <div className="flex items-center gap-3">
+                <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.65rem", color: COLOR.inkDim, width: "34px" }}>{e.meal}</span>
+                <span>{e.name}</span>
+                {e.source !== "db" && <span style={{ color: COLOR.turmeric, fontSize: "0.65rem" }}>추정</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <span style={{ fontFamily: "'Oswald', sans-serif" }}>{e.calories} kcal</span>
+                <button onClick={() => onDeleteEntry(e.id)} style={{ color: COLOR.inkDim }} className="text-xs p-2 -m-2">✕</button>
+              </div>
             </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
-            {/* 현재 프로필 수치 요약 */}
+function WeeklyChart({ showWeekly, setShowWeekly, weekly, goal, selectedDate, selectDate }) {
+  const maxCalorieInWeekly = Math.max(...weekly.map((d) => d.calories || 0), 0);
+  const yMax = Math.ceil(Math.max(maxCalorieInWeekly, goal || 2000) * 1.15);
+
+  return (
+    <div style={{ borderTop: `1px solid ${COLOR.line}` }} className="pt-4 mt-6">
+      <button
+        onClick={() => setShowWeekly(!showWeekly)}
+        style={{ fontFamily: "'Jua', sans-serif", background: COLOR.paperDim, border: `1px solid ${COLOR.line}`, color: COLOR.ink }}
+        className="w-full py-2.5 px-4 text-xs font-medium flex items-center justify-between rounded hover:bg-gray-200 transition-colors"
+      >
+        <span>📊 최근 7일 섭취 추이 그래프</span>
+        <span>{showWeekly ? "▴ 접기" : "▾ 펼쳐보기"}</span>
+      </button>
+      {showWeekly && (
+        <div className="mt-3 p-3 border rounded bg-white">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}>최근 7일 추이</div>
+              <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>💡 막대를 클릭하여 해당 날짜 기록 확인</span>
+            </div>
+            <div style={{ width: "100%", height: 170 }}>
+              <ResponsiveContainer>
+                <BarChart data={weekly} margin={{ top: 16, right: 4, left: -15, bottom: 0 }} onClick={(state) => {
+                  if (state && state.activePayload && state.activePayload.length) {
+                    const targetDate = state.activePayload[0].payload.date;
+                    if (targetDate) selectDate(targetDate);
+                  }
+                }}>
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLOR.inkDim }} axisLine={{ stroke: COLOR.line }} tickLine={false} />
+                  <YAxis domain={[0, yMax]} tick={{ fontSize: 10, fill: COLOR.inkDim }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: COLOR.paper, border: `1px solid ${COLOR.line}`, fontSize: "0.8rem" }} />
+                  {goal > 0 && (
+                    <ReferenceLine y={goal} stroke={COLOR.olive} strokeWidth={2} label={{ value: `목표 ${goal.toLocaleString()}kcal`, fill: COLOR.olive, fontSize: 10, position: "top", fontWeight: 600 }} />
+                  )}
+                  <Bar dataKey="calories" radius={[2, 2, 0, 0]}>
+                    {weekly.map((d, i) => {
+                      const isSelected = d.date === selectedDate;
+                      return (
+                        <Cell key={i} cursor="pointer" onClick={() => selectDate(d.date)} stroke={isSelected ? COLOR.ink : "none"} strokeWidth={isSelected ? 2 : 0} fill={isSelected ? (d.calories > goal ? "#B91C1C" : COLOR.ink) : (d.calories > goal ? COLOR.brick : COLOR.turmeric)} />
+                      );
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InputSection({ 
+  mode, setMode, isHalf, setIsHalf, 
+  manualName, setManualName, manualCal, setManualCal, addManualEntry, setShowRefModal,
+  searchText, setSearchText, searchSuggestions, setSearchSuggestions, doSearch, searchLoading, searchResult, setSearchResult,
+  input, setInput, logSuggestions, setLogSuggestions, addEntry, loading
+}) {
+  return (
+    <div style={{ borderTop: `1px solid ${COLOR.line}`, borderBottom: `1px solid ${COLOR.line}` }} className="py-4 mb-6">
+      {mode === null && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={() => { setMode("log"); setIsHalf(false); }} style={{ fontFamily: "'Jua', sans-serif", background: COLOR.ink, color: COLOR.paper }} className="flex-[2] py-3 px-3 text-sm font-medium flex items-center justify-center gap-1.5 hover:opacity-90">
+            <span>✏️ 뭐 먹었더라?</span>
+          </button>
+          <button onClick={() => { setMode("search"); setSearchText(""); setSearchResult(null); setIsHalf(false); }} style={{ fontFamily: "'Jua', sans-serif", border: `1px solid ${COLOR.line}`, background: COLOR.paperDim, color: COLOR.inkDim }} className="flex-1 py-3 px-2 text-xs flex items-center justify-center gap-1 hover:bg-gray-200 transition-colors">
+            <span>🔍 칼로리만 계산</span>
+          </button>
+          <button onClick={() => { setMode("manual"); setManualName(""); setManualCal(""); setIsHalf(false); }} style={{ fontFamily: "'Jua', sans-serif", border: `1px solid ${COLOR.line}`, background: "white", color: COLOR.ink }} className="flex-1 py-3 px-2 text-xs flex items-center justify-center gap-1 hover:bg-gray-100 transition-colors">
+            <span>⚙️ 직접 입력</span>
+          </button>
+        </div>
+      )}
+
+      {mode === "manual" && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}>✏️ 칼로리 직접 수동입력</span>
+              <button type="button" onClick={() => setShowRefModal(true)} style={{ fontFamily: "'Jua', sans-serif", border: `1px solid ${COLOR.line}`, background: COLOR.paperDim, color: COLOR.brick }} className="px-2 py-0.5 text-xs rounded hover:bg-amber-100 transition-colors">💡 칼로리 참고표 보기</button>
+            </div>
+            <button onClick={() => { setMode(null); setIsHalf(false); }} style={{ color: COLOR.inkDim, fontSize: "0.75rem" }} className="py-1.5 px-1">← 뒤로</button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+            <input value={manualName} onChange={(e) => setManualName(e.target.value)} placeholder="음식 이름 (예: 엄마표 볶음밥)" style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }} className="w-full px-3 py-2 rounded" />
+            <div className="flex gap-2">
+              <input type="number" value={manualCal} onChange={(e) => setManualCal(e.target.value)} placeholder="칼로리 (kcal)" style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }} className="w-full px-3 py-2 rounded" />
+              <button onClick={addManualEntry} disabled={!manualName.trim() || !manualCal} style={{ fontFamily: "'Jua', sans-serif", background: !manualName.trim() || !manualCal ? COLOR.inkDim : COLOR.ink, color: COLOR.paper }} className="px-4 py-2 text-sm flex-shrink-0">등록</button>
+            </div>
+          </div>
+          <div className="mt-2.5 flex items-center justify-between">
+            <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+              <input type="checkbox" checked={isHalf} onChange={(e) => setIsHalf(e.target.checked)} className="w-4 h-4 accent-amber-600 rounded" />
+              <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>🥣 1/2 섭취 (50% 칼로리로 계산)</span>
+            </label>
+            <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>{isHalf ? "50% 적용 중" : "기본 1인분"}</span>
+          </div>
+        </div>
+      )}
+
+      {mode === "search" && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.turmeric }}>칼로리만 계산 · 기록되지 않음</span>
+              <button type="button" onClick={() => setShowRefModal(true)} style={{ fontFamily: "'Jua', sans-serif", border: `1px solid ${COLOR.line}`, background: COLOR.paperDim, color: COLOR.brick }} className="px-2 py-0.5 text-xs rounded hover:bg-amber-100 transition-colors">💡 칼로리 참고표 보기</button>
+            </div>
+            <button onClick={() => { setMode(null); setIsHalf(false); }} style={{ color: COLOR.inkDim, fontSize: "0.75rem" }} className="py-1.5 px-1">← 뒤로</button>
+          </div>
+          <div className="flex gap-2 relative">
+            <div className="flex-1 relative">
+              <input value={searchText} onChange={(e) => { setSearchText(e.target.value); setSearchSuggestions(getSuggestions(e.target.value)); }} onKeyDown={(e) => e.key === "Enter" && doSearch()} placeholder="예: 삼겹살" style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }} className="w-full px-3 py-2 rounded" />
+              {searchSuggestions.length > 0 && (
+                <div style={{ border: `2px solid ${COLOR.ink}`, background: "white", top: "100%" }} className="absolute left-0 right-0 z-20 mt-1 shadow-xl rounded-lg overflow-hidden">
+                  {searchSuggestions.map((s) => (
+                    <button key={s.name} onClick={() => { setSearchText(s.name); setSearchSuggestions([]); const finalCal = isHalf ? Math.round(s.cal * 0.5) : s.cal; const finalName = isHalf ? `${s.name} (1/2)` : s.name; setSearchResult({ name: finalName, calories: finalCal, source: "db" }); }} style={{ borderBottom: `1px solid ${COLOR.line}` }} className="w-full flex items-center justify-between px-4 py-3 text-base text-left hover:bg-amber-100 transition-colors">
+                      <span className="font-medium text-slate-900">{s.name}</span>
+                      <span style={{ color: COLOR.turmeric }} className="text-sm font-semibold">{isHalf ? Math.round(s.cal * 0.5) : s.cal} kcal</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button onClick={doSearch} disabled={searchLoading} style={{ fontFamily: "'Jua', sans-serif", border: `1px solid ${COLOR.ink}`, color: COLOR.ink }} className="px-4 py-2 text-sm">{searchLoading ? "확인 중…" : "검색"}</button>
+          </div>
+          <div className="mt-2.5 flex items-center justify-between">
+            <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+              <input type="checkbox" checked={isHalf} onChange={(e) => setIsHalf(e.target.checked)} className="w-4 h-4 accent-amber-600 rounded" />
+              <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>🥣 1/2 섭취 (50% 칼로리로 계산)</span>
+            </label>
+            <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>{isHalf ? "50% 적용 중" : "기본 1인분"}</span>
+          </div>
+          {searchResult && (
+            <div style={{ border: `1px solid ${COLOR.line}`, background: COLOR.paperDim }} className="flex items-center justify-between px-3 py-2 mt-2 text-sm">
+              <span>{searchResult.name}{searchResult.source !== "db" && <span style={{ color: COLOR.turmeric, fontSize: "0.65rem" }} className="ml-2">추정</span>}</span>
+              <span style={{ fontFamily: "'Jua', sans-serif", fontWeight: 600 }}>{searchResult.calories} kcal</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {mode === "log" && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}>식사 기록하기</span>
+            <button onClick={() => { setMode(null); setIsHalf(false); }} style={{ color: COLOR.inkDim, fontSize: "0.75rem" }} className="py-1.5 px-1">← 뒤로</button>
+          </div>
+          <div style={{ color: COLOR.inkDim, fontSize: "0.75rem" }} className="mb-2">지금은 <span style={{ color: COLOR.ink, fontWeight: 600 }}>{getAutoMeal()}</span> 시간대로 자동 기록됩니다</div>
+          <div className="flex gap-2 relative">
+            <div className="flex-1 relative">
+              <input value={input} onChange={(e) => { setInput(e.target.value); setLogSuggestions(getSuggestions(e.target.value)); }} onKeyDown={(e) => e.key === "Enter" && addEntry()} placeholder="음식 이름 입력 (예: 김치찌개)" style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }} className="w-full px-3 py-2 rounded" />
+              {logSuggestions.length > 0 && (
+                <div style={{ border: `2px solid ${COLOR.ink}`, background: "white", top: "100%" }} className="absolute left-0 right-0 z-20 mt-1 shadow-xl rounded-lg overflow-hidden">
+                  {logSuggestions.map((s) => (
+                    <button key={s.name} onClick={() => { setInput(s.name); setLogSuggestions([]); }} style={{ borderBottom: `1px solid ${COLOR.line}` }} className="w-full flex items-center justify-between px-4 py-3 text-base text-left hover:bg-amber-100 transition-colors">
+                      <span className="font-medium text-slate-900">{s.name}</span>
+                      <span style={{ color: COLOR.turmeric }} className="text-sm font-semibold">{s.cal} kcal</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button onClick={addEntry} disabled={loading} style={{ fontFamily: "'Jua', sans-serif", background: loading ? COLOR.inkDim : COLOR.ink, color: COLOR.paper }} className="px-4 py-2 text-sm">{loading ? "계산 중…" : "추가"}</button>
+          </div>
+          <div className="mt-2.5 flex items-center justify-between">
+            <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+              <input type="checkbox" checked={isHalf} onChange={(e) => setIsHalf(e.target.checked)} className="w-4 h-4 accent-amber-600 rounded" />
+              <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>🥣 1/2 섭취 (50% 칼로리로 계산)</span>
+            </label>
+            <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>{isHalf ? "50% 적용 중" : "기본 1인분"}</span>
+          </div>
+        </div>
+      )}
+      <div style={{ color: COLOR.inkDim, fontSize: "0.7rem" }} className="mt-2">DB에 없는 음식은 자동으로 추정 계산됩니다</div>
+    </div>
+  );
+}
+
+function Modals({ 
+  showProfileForm, setShowProfileForm, profile, profileDraft, setProfileDraft, saveProfile, goalInfo,
+  showRefModal, setShowRefModal, refSearch, setRefSearch, refCat, setRefCat, selectRefFood
+}) {
+  return (
+    <>
+      {showProfileForm && (
+        <div style={{ background: "rgba(0, 0, 0, 0.4)" }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div style={{ background: COLOR.paper, border: `2px solid ${COLOR.ink}` }} className="w-full max-w-md p-5 rounded-lg shadow-xl max-h-[90vh] overflow-y-auto text-sm">
+            <div className="flex items-center justify-between border-b pb-2 mb-3">
+              <span className="font-semibold text-base" style={{ color: COLOR.ink }}>⚙️ 프로필 & 목표 설정</span>
+              <button type="button" onClick={() => { if (profile) setProfileDraft(profile); setShowProfileForm(false); }} style={{ color: COLOR.inkDim, fontSize: "0.9rem" }} className="px-2 py-0.5 hover:opacity-80 font-bold">✕</button>
+            </div>
             {profile && goalInfo && (
-              <div
-                style={{ border: `1px solid ${COLOR.line}`, background: COLOR.paperDim }}
-                className="p-3 mb-4 rounded text-xs grid grid-cols-2 md:grid-cols-4 gap-2 text-center"
-              >
-                <div>
-                  <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>기초대사량 (BMR)</div>
-                  <div className="font-semibold">{goalInfo.bmr.toLocaleString()} kcal</div>
-                </div>
-                <div>
-                  <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동 계수</div>
-                  <div className="font-semibold text-amber-700">x {goalInfo.activityMult}배</div>
-                </div>
-                <div>
-                  <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동소비 (TDEE)</div>
-                  <div className="font-semibold">{goalInfo.tdee.toLocaleString()} kcal</div>
-                </div>
-                <div>
-                  <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>목표 칼로리</div>
-                  <div className="font-semibold text-emerald-700">
-                    {goalInfo.goalCal.toLocaleString()} kcal
-                  </div>
-                </div>
+              <div style={{ border: `1px solid ${COLOR.line}`, background: COLOR.paperDim }} className="p-3 mb-4 rounded text-xs grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
+                <div><div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>기초대사량 (BMR)</div><div className="font-semibold">{goalInfo.bmr.toLocaleString()} kcal</div></div>
+                <div><div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동 계수</div><div className="font-semibold text-amber-700">x {goalInfo.activityMult}배</div></div>
+                <div><div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동소비 (TDEE)</div><div className="font-semibold">{goalInfo.tdee.toLocaleString()} kcal</div></div>
+                <div><div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>목표 칼로리</div><div className="font-semibold text-emerald-700">{goalInfo.goalCal.toLocaleString()} kcal</div></div>
               </div>
             )}
-
             <div className="flex gap-2 mb-3">
-              {[
-                { value: "female", label: "여성" },
-                { value: "male", label: "남성" },
-              ].map((g) => (
-                <button
-                  key={g.value}
-                  onClick={() => setProfileDraft({ ...profileDraft, gender: g.value })}
-                  style={{
-                    fontFamily: "'Jua', sans-serif",
-                    fontSize: "0.8rem",
-                    border: `1px solid ${
-                      profileDraft.gender === g.value ? COLOR.ink : COLOR.line
-                    }`,
-                    background: profileDraft.gender === g.value ? COLOR.ink : "transparent",
-                    color: profileDraft.gender === g.value ? COLOR.paper : COLOR.inkDim,
-                  }}
-                  className="flex-1 py-1.5 rounded"
-                >
-                  {g.label}
-                </button>
+              {[{ value: "female", label: "여성" }, { value: "male", label: "남성" }].map((g) => (
+                <button key={g.value} onClick={() => setProfileDraft({ ...profileDraft, gender: g.value })} style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", border: `1px solid ${profileDraft.gender === g.value ? COLOR.ink : COLOR.line}`, background: profileDraft.gender === g.value ? COLOR.ink : "transparent", color: profileDraft.gender === g.value ? COLOR.paper : COLOR.inkDim }} className="flex-1 py-1.5 rounded">{g.label}</button>
               ))}
             </div>
-
             <div className="grid grid-cols-2 gap-2 mb-3">
-              {[
-                { key: "age", label: "나이" },
-                { key: "height", label: "키 (cm)" },
-                { key: "currentWeight", label: "현재 체중 (kg)" },
-                { key: "targetWeight", label: "목표 체중 (kg)" },
-              ].map((f) => (
+              {[{ key: "age", label: "나이" }, { key: "height", label: "키 (cm)" }, { key: "currentWeight", label: "현재 체중 (kg)" }, { key: "targetWeight", label: "목표 체중 (kg)" }].map((f) => (
                 <label key={f.key} className="block">
                   <span style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>{f.label}</span>
-                  <input
-                    type="number"
-                    value={profileDraft[f.key]}
-                    onChange={(e) =>
-                      setProfileDraft({ ...profileDraft, [f.key]: e.target.value })
-                    }
-                    style={{ border: `1px solid ${COLOR.line}`, background: "white", fontSize: "16px" }}
-                    className="w-full px-2 py-1.5 mt-0.5 rounded"
-                  />
+                  <input type="number" value={profileDraft[f.key]} onChange={(e) => setProfileDraft({ ...profileDraft, [f.key]: e.target.value })} style={{ border: `1px solid ${COLOR.line}`, background: "white", fontSize: "16px" }} className="w-full px-2 py-1.5 mt-0.5 rounded" />
                 </label>
               ))}
             </div>
-
             <span style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>활동량 선택 (활동 계수 반영)</span>
             <div className="grid grid-cols-2 gap-1.5 mt-1 mb-4">
               {ACTIVITY_LEVELS.map((a) => (
-                <button
-                  key={a.value}
-                  onClick={() => setProfileDraft({ ...profileDraft, activity: a.value })}
-                  style={{
-                    fontFamily: "'Jua', sans-serif",
-                    fontSize: "0.75rem",
-                    border: `1px solid ${
-                      profileDraft.activity === a.value ? COLOR.ink : COLOR.line
-                    }`,
-                    background: profileDraft.activity === a.value ? COLOR.ink : "transparent",
-                    color: profileDraft.activity === a.value ? COLOR.paper : COLOR.inkDim,
-                  }}
-                  className="px-2 py-1.5 text-center rounded"
-                >
-                  {a.label}
-                </button>
+                <button key={a.value} onClick={() => setProfileDraft({ ...profileDraft, activity: a.value })} style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.75rem", border: `1px solid ${profileDraft.activity === a.value ? COLOR.ink : COLOR.line}`, background: profileDraft.activity === a.value ? COLOR.ink : "transparent", color: profileDraft.activity === a.value ? COLOR.paper : COLOR.inkDim }} className="px-2 py-1.5 text-center rounded">{a.label}</button>
               ))}
             </div>
-
-            {/* 실시간 계산 미리보기 박스 */}
             {(() => {
               const draftCalc = calcGoalCalories(profileDraft);
               if (!draftCalc) return null;
               return (
-                <div
-                  style={{ border: `1px dashed ${COLOR.line}`, background: "#F8F9FA" }}
-                  className="p-2.5 mb-4 text-xs rounded"
-                >
+                <div style={{ border: `1px dashed ${COLOR.line}`, background: "#F8F9FA" }} className="p-2.5 mb-4 text-xs rounded">
                   <div className="font-semibold mb-1 text-slate-700">📊 계산 결과 미리보기:</div>
                   <div className="grid grid-cols-2 gap-1 text-slate-600">
                     <div>기초대사량: <b>{draftCalc.bmr.toLocaleString()} kcal</b></div>
@@ -968,759 +858,216 @@ export default function CalorieJournal() {
                 </div>
               );
             })()}
-
             <div className="flex items-center justify-end gap-2 pt-2 border-t">
-              <button
-                type="button"
-                onClick={() => {
-                  if (profile) setProfileDraft(profile);
-                  setShowProfileForm(false);
-                }}
-                style={{
-                  color: COLOR.inkDim,
-                  fontSize: "0.8rem",
-                  border: `1px solid ${COLOR.line}`,
-                }}
-                className="px-3 py-1.5 rounded hover:bg-gray-100"
-              >
-                닫기 / 취소
-              </button>
-              <button
-                onClick={() => {
-                  saveProfile();
-                  setShowProfileForm(false);
-                }}
-                style={{
-                  fontFamily: "'Jua', sans-serif",
-                  background: COLOR.ink,
-                  color: COLOR.paper,
-                }}
-                className="px-4 py-1.5 text-xs rounded font-medium"
-              >
-                저장하고 적용
-              </button>
+              <button type="button" onClick={() => { if (profile) setProfileDraft(profile); setShowProfileForm(false); }} style={{ color: COLOR.inkDim, fontSize: "0.8rem", border: `1px solid ${COLOR.line}` }} className="px-3 py-1.5 rounded hover:bg-gray-100">닫기 / 취소</button>
+              <button onClick={() => { saveProfile(); setShowProfileForm(false); }} style={{ fontFamily: "'Jua', sans-serif", background: COLOR.ink, color: COLOR.paper }} className="px-4 py-1.5 text-xs rounded font-medium">저장하고 적용</button>
             </div>
           </div>
         </div>
       )}
-      {/* Hero gauge */}
-      <div className="flex items-center gap-4 mb-2">
-        <div style={{ width: 130, height: 130, position: "relative", flexShrink: 0 }}>
-          <ResponsiveContainer>
-            <RadialBarChart
-              innerRadius="72%"
-              outerRadius="100%"
-              data={gaugeData}
-              startAngle={90}
-              endAngle={-270}
-            >
-              <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-              <RadialBar dataKey="value" cornerRadius={0} background={{ fill: COLOR.paperDim }} />
-            </RadialBarChart>
-          </ResponsiveContainer>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              pointerEvents: "none",
-            }}
-          >
-            <div
-              style={{
-                fontFamily: "'Jua', sans-serif",
-                fontSize: "1.35rem",
-                fontWeight: 700,
-                color: COLOR.ink,
-                lineHeight: 1.05,
-              }}
-            >
-              {total.toLocaleString()}
-            </div>
-            <div style={{ fontFamily: "'Jua', sans-serif", color: COLOR.inkDim, fontSize: "0.65rem" }}>
-              kcal
-            </div>
-            <div style={{ color: statusColor, fontSize: "0.7rem", fontWeight: 600, marginTop: "1px" }}>
-              {Math.round(ratio * 100)}%
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div
-            style={{ color: statusColor, fontFamily: "'Jua', sans-serif", fontWeight: 600 }}
-            className="text-lg"
-          >
-            {statusLabel}
-          </div>
-          <div style={{ color: COLOR.inkDim, fontSize: "0.85rem" }}>
-            {goal - total >= 0
-              ? `${(goal - total).toLocaleString()} kcal 더 섭취 가능`
-              : `${(total - goal).toLocaleString()} kcal 초과`}
-          </div>
-        </div>
-      </div>
-      <div style={{ color: COLOR.inkDim, fontSize: "0.75rem", lineHeight: 1.5 }} className="mb-6">
-        <div>오늘 섭취 {total.toLocaleString()}kcal ÷ 목표 {goal.toLocaleString()}kcal 기준</div>
-        <div style={{ fontSize: "0.7rem", opacity: 0.85 }} className="mt-0.5">
-          · 85% 미만 여유있음 · 85~105% 목표 근접 · 105% 초과 시 초과
-        </div>
-      </div>
 
-      {/* Input Mode Selector */}
-      <div style={{ borderTop: `1px solid ${COLOR.line}`, borderBottom: `1px solid ${COLOR.line}` }} className="py-4 mb-6">
-        {mode === null && (
-          <div className="flex flex-wrap items-center gap-2">
-            {/* 주 메인 버튼 (Primary CTA) */}
-            <button
-              onClick={() => {
-                setMode("log");
-                setIsHalf(false);
-              }}
-              style={{
-                fontFamily: "'Jua', sans-serif",
-                background: COLOR.ink,
-                color: COLOR.paper,
-              }}
-              className="flex-[2] py-3 px-3 text-sm font-medium flex items-center justify-center gap-1.5 hover:opacity-90"
-            >
-              <span>✏️ 뭐 먹었더라?</span>
-            </button>
-
-            {/* 보조 버튼 (Secondary Ghost Button) */}
-            <button
-              onClick={() => {
-                setMode("search");
-                setSearchText("");
-                setSearchResult(null);
-                setIsHalf(false);
-              }}
-              style={{
-                fontFamily: "'Jua', sans-serif",
-                border: `1px solid ${COLOR.line}`,
-                background: COLOR.paperDim,
-                color: COLOR.inkDim,
-              }}
-              className="flex-1 py-3 px-2 text-xs flex items-center justify-center gap-1 hover:bg-gray-200 transition-colors"
-            >
-              <span>🔍 칼로리만 계산</span>
-            </button>
-
-            {/* 수동 직접 입력 버튼 */}
-            <button
-              onClick={() => {
-                setMode("manual");
-                setManualName("");
-                setManualCal("");
-                setIsHalf(false);
-              }}
-              style={{
-                fontFamily: "'Jua', sans-serif",
-                border: `1px solid ${COLOR.line}`,
-                background: "white",
-                color: COLOR.ink,
-              }}
-              className="flex-1 py-3 px-2 text-xs flex items-center justify-center gap-1 hover:bg-gray-100 transition-colors"
-            >
-              <span>⚙️ 직접 입력</span>
-            </button>
-          </div>
-        )}
-
-        {mode === "manual" && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}>
-                  ✏️ 칼로리 직접 수동입력
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowRefModal(true)}
-                  style={{
-                    fontFamily: "'Jua', sans-serif",
-                    border: `1px solid ${COLOR.line}`,
-                    background: COLOR.paperDim,
-                    color: COLOR.brick,
-                  }}
-                  className="px-2 py-0.5 text-xs rounded hover:bg-amber-100 transition-colors"
-                >
-                  💡 칼로리 참고표 보기
-                </button>
-              </div>
-              <button
-                onClick={() => {
-                  setMode(null);
-                  setIsHalf(false);
-                }}
-                style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
-                className="py-1.5 px-1"
-              >
-                ← 뒤로
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
-              <input
-                value={manualName}
-                onChange={(e) => setManualName(e.target.value)}
-                placeholder="음식 이름 (예: 엄마표 볶음밥)"
-                style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }}
-                className="w-full px-3 py-2 rounded"
-              />
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  value={manualCal}
-                  onChange={(e) => setManualCal(e.target.value)}
-                  placeholder="칼로리 (kcal)"
-                  style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }}
-                  className="w-full px-3 py-2 rounded"
-                />
-                <button
-                  onClick={addManualEntry}
-                  disabled={!manualName.trim() || !manualCal}
-                  style={{
-                    fontFamily: "'Jua', sans-serif",
-                    background: !manualName.trim() || !manualCal ? COLOR.inkDim : COLOR.ink,
-                    color: COLOR.paper,
-                  }}
-                  className="px-4 py-2 text-sm flex-shrink-0"
-                >
-                  등록
-                </button>
-              </div>
-            </div>
-            {/* 음식을 고른 후 체크하는 1/2 옵션 */}
-            <div className="mt-2.5 flex items-center justify-between">
-              <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
-                <input
-                  type="checkbox"
-                  checked={isHalf}
-                  onChange={(e) => setIsHalf(e.target.checked)}
-                  className="w-4 h-4 accent-amber-600 rounded"
-                />
-                <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
-                  🥣 1/2 섭취 (50% 칼로리로 계산)
-                </span>
-              </label>
-              <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
-                {isHalf ? "50% 적용 중" : "기본 1인분"}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {mode === "search" && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span
-                  style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.turmeric }}
-                >
-                  칼로리만 계산 · 기록되지 않음
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowRefModal(true)}
-                  style={{
-                    fontFamily: "'Jua', sans-serif",
-                    border: `1px solid ${COLOR.line}`,
-                    background: COLOR.paperDim,
-                    color: COLOR.brick,
-                  }}
-                  className="px-2 py-0.5 text-xs rounded hover:bg-amber-100 transition-colors"
-                >
-                  💡 칼로리 참고표 보기
-                </button>
-              </div>
-              <button
-                onClick={() => {
-                  setMode(null);
-                  setIsHalf(false);
-                }}
-                style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
-                className="py-1.5 px-1"
-              >
-                ← 뒤로
-              </button>
-            </div>
-            <div className="flex gap-2 relative">
-              <div className="flex-1 relative">
-                <input
-                  value={searchText}
-                  onChange={(e) => {
-                    setSearchText(e.target.value);
-                    setSearchSuggestions(getSuggestions(e.target.value));
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && doSearch()}
-                  placeholder="예: 삼겹살"
-                  style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }}
-                  className="w-full px-3 py-2 rounded"
-                />
-                {searchSuggestions.length > 0 && (
-                  <div
-                    style={{
-                      border: `2px solid ${COLOR.ink}`,
-                      background: "white",
-                      top: "100%",
-                    }}
-                    className="absolute left-0 right-0 z-20 mt-1 shadow-xl rounded-lg overflow-hidden"
-                  >
-                    {searchSuggestions.map((s) => (
-                      <button
-                        key={s.name}
-                        onClick={() => {
-                          setSearchText(s.name);
-                          setSearchSuggestions([]);
-                          const finalCal = isHalf ? Math.round(s.cal * 0.5) : s.cal;
-                          const finalName = isHalf ? `${s.name} (1/2)` : s.name;
-                          setSearchResult({ name: finalName, calories: finalCal, source: "db" });
-                        }}
-                        style={{ borderBottom: `1px solid ${COLOR.line}` }}
-                        className="w-full flex items-center justify-between px-4 py-3 text-base text-left hover:bg-amber-100 transition-colors"
-                      >
-                        <span className="font-medium text-slate-900">{s.name}</span>
-                        <span style={{ color: COLOR.turmeric }} className="text-sm font-semibold">
-                          {isHalf ? Math.round(s.cal * 0.5) : s.cal} kcal
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={doSearch}
-                disabled={searchLoading}
-                style={{
-                  fontFamily: "'Jua', sans-serif",
-                  border: `1px solid ${COLOR.ink}`,
-                  color: COLOR.ink,
-                }}
-                className="px-4 py-2 text-sm"
-              >
-                {searchLoading ? "확인 중…" : "검색"}
-              </button>
-            </div>
-            {/* 음식을 고른 후 체크하는 1/2 옵션 */}
-            <div className="mt-2.5 flex items-center justify-between">
-              <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
-                <input
-                  type="checkbox"
-                  checked={isHalf}
-                  onChange={(e) => setIsHalf(e.target.checked)}
-                  className="w-4 h-4 accent-amber-600 rounded"
-                />
-                <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
-                  🥣 1/2 섭취 (50% 칼로리로 계산)
-                </span>
-              </label>
-              <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
-                {isHalf ? "50% 적용 중" : "기본 1인분"}
-              </span>
-            </div>
-            {searchResult && (
-              <div
-                style={{ border: `1px solid ${COLOR.line}`, background: COLOR.paperDim }}
-                className="flex items-center justify-between px-3 py-2 mt-2 text-sm"
-              >
-                <span>
-                  {searchResult.name}
-                  {searchResult.source !== "db" && (
-                    <span style={{ color: COLOR.turmeric, fontSize: "0.65rem" }} className="ml-2">
-                      추정
-                    </span>
-                  )}
-                </span>
-                <span style={{ fontFamily: "'Jua', sans-serif", fontWeight: 600 }}>
-                  {searchResult.calories} kcal
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {mode === "log" && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}>
-                식사 기록하기
-              </span>
-              <button
-                onClick={() => {
-                  setMode(null);
-                  setIsHalf(false);
-                }}
-                style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
-                className="py-1.5 px-1"
-              >
-                ← 뒤로
-              </button>
-            </div>
-            <div
-              style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
-              className="mb-2"
-            >
-              지금은{" "}
-              <span style={{ color: COLOR.ink, fontWeight: 600 }}>
-                {getAutoMeal()}
-              </span>{" "}
-              시간대로 자동 기록됩니다
-            </div>
-            <div className="flex gap-2 relative">
-              <div className="flex-1 relative">
-                <input
-                  value={input}
-                  onChange={(e) => {
-                    setInput(e.target.value);
-                    setLogSuggestions(getSuggestions(e.target.value));
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && addEntry()}
-                  placeholder="음식 이름 입력 (예: 김치찌개)"
-                  style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }}
-                  className="w-full px-3 py-2 rounded"
-                />
-                {logSuggestions.length > 0 && (
-                  <div
-                    style={{
-                      border: `2px solid ${COLOR.ink}`,
-                      background: "white",
-                      top: "100%",
-                    }}
-                    className="absolute left-0 right-0 z-20 mt-1 shadow-xl rounded-lg overflow-hidden"
-                  >
-                    {logSuggestions.map((s) => (
-                      <button
-                        key={s.name}
-                        onClick={() => {
-                          setInput(s.name);
-                          setLogSuggestions([]);
-                        }}
-                        style={{ borderBottom: `1px solid ${COLOR.line}` }}
-                        className="w-full flex items-center justify-between px-4 py-3 text-base text-left hover:bg-amber-100 transition-colors"
-                      >
-                        <span className="font-medium text-slate-900">{s.name}</span>
-                        <span style={{ color: COLOR.turmeric }} className="text-sm font-semibold">
-                          {s.cal} kcal
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={addEntry}
-                disabled={loading}
-                style={{
-                  fontFamily: "'Jua', sans-serif",
-                  background: loading ? COLOR.inkDim : COLOR.ink,
-                  color: COLOR.paper,
-                }}
-                className="px-4 py-2 text-sm"
-              >
-                {loading ? "계산 중…" : "추가"}
-              </button>
-            </div>
-            {/* 음식을 고른 후 체크하는 1/2 옵션 */}
-            <div className="mt-2.5 flex items-center justify-between">
-              <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
-                <input
-                  type="checkbox"
-                  checked={isHalf}
-                  onChange={(e) => setIsHalf(e.target.checked)}
-                  className="w-4 h-4 accent-amber-600 rounded"
-                />
-                <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
-                  🥣 1/2 섭취 (50% 칼로리로 계산)
-                </span>
-              </label>
-              <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
-                {isHalf ? "50% 적용 중" : "기본 1인분"}
-              </span>
-            </div>
-          </div>
-        )}
-
-        <div style={{ color: COLOR.inkDim, fontSize: "0.7rem" }} className="mt-2">
-          DB에 없는 음식은 자동으로 추정 계산됩니다
-        </div>
-      </div>
-
-      {/* Today's list */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <div
-            style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}
-            className="font-semibold"
-          >
-            {selectedDate === todayStr() ? "오늘 기록" : `${selectedDate} 기록`} ({entries.length})
-          </div>
-          {selectedDate !== todayStr() && (
-            <button
-              onClick={() => selectDate(todayStr())}
-              style={{ color: COLOR.olive, fontSize: "0.75rem" }}
-              className="font-semibold underline hover:opacity-80"
-            >
-              오늘로 돌아가기 ↩
-            </button>
-          )}
-        </div>
-        {entries.length === 0 && !ready ? null : entries.length === 0 ? (
-          <div style={{ color: COLOR.inkDim, fontSize: "0.85rem" }} className="py-4">
-            {selectedDate === todayStr()
-              ? "아직 기록이 없습니다. 위에서 먹은 음식을 입력해보세요."
-              : `${selectedDate}에 등록된 식사 기록이 없습니다.`}
-          </div>
-        ) : (
-          <div>
-            {entries.map((e) => (
-              <div
-                key={e.id}
-                style={{ borderBottom: `1px solid ${COLOR.line}` }}
-                className="flex items-center justify-between py-2 text-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    style={{
-                      fontFamily: "'Jua', sans-serif",
-                      fontSize: "0.65rem",
-                      color: COLOR.inkDim,
-                      width: "34px",
-                    }}
-                  >
-                    {e.meal}
-                  </span>
-                  <span>{e.name}</span>
-                  {e.source !== "db" && (
-                    <span style={{ color: COLOR.turmeric, fontSize: "0.65rem" }}>추정</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  <span style={{ fontFamily: "'Oswald', sans-serif" }}>{e.calories} kcal</span>
-                  <button
-                    onClick={() => deleteEntry(e.id)}
-                    style={{ color: COLOR.inkDim }}
-                    className="text-xs p-2 -m-2"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Weekly chart (Collapsible Accordion) */}
-      <div style={{ borderTop: `1px solid ${COLOR.line}` }} className="pt-4 mt-6">
-        <button
-          onClick={() => setShowWeekly(!showWeekly)}
-          style={{
-            fontFamily: "'Jua', sans-serif",
-            background: COLOR.paperDim,
-            border: `1px solid ${COLOR.line}`,
-            color: COLOR.ink,
-          }}
-          className="w-full py-2.5 px-4 text-xs font-medium flex items-center justify-between rounded hover:bg-gray-200 transition-colors"
-        >
-          <span>📊 최근 7일 섭취 추이 그래프</span>
-          <span>{showWeekly ? "▴ 접기" : "▾ 펼쳐보기"}</span>
-        </button>
-
-        {showWeekly && (
-          <div className="mt-3 p-3 border rounded bg-white">
-            {(() => {
-              const maxCalorieInWeekly = Math.max(...weekly.map((d) => d.calories || 0), 0);
-              const yMax = Math.ceil(Math.max(maxCalorieInWeekly, goal || 2000) * 1.15);
-              return (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div
-                      style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
-                    >
-                      최근 7일 추이
-                    </div>
-                    <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
-                      💡 막대를 클릭하여 해당 날짜 기록 확인
-                    </span>
-                  </div>
-                  <div style={{ width: "100%", height: 170 }}>
-                    <ResponsiveContainer>
-                      <BarChart
-                        data={weekly}
-                        margin={{ top: 16, right: 4, left: -15, bottom: 0 }}
-                        onClick={(state) => {
-                          if (state && state.activePayload && state.activePayload.length) {
-                            const targetDate = state.activePayload[0].payload.date;
-                            if (targetDate) selectDate(targetDate);
-                          }
-                        }}
-                      >
-                        <XAxis
-                          dataKey="label"
-                          tick={{ fontSize: 11, fill: COLOR.inkDim }}
-                          axisLine={{ stroke: COLOR.line }}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          domain={[0, yMax]}
-                          tick={{ fontSize: 10, fill: COLOR.inkDim }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            background: COLOR.paper,
-                            border: `1px solid ${COLOR.line}`,
-                            fontSize: "0.8rem",
-                          }}
-                        />
-                        {goal > 0 && (
-                          <ReferenceLine
-                            y={goal}
-                            stroke={COLOR.olive}
-                            strokeWidth={2}
-                            label={{
-                              value: `목표 ${goal.toLocaleString()}kcal`,
-                              fill: COLOR.olive,
-                              fontSize: 10,
-                              position: "top",
-                              fontWeight: 600,
-                            }}
-                          />
-                        )}
-                        <Bar dataKey="calories" radius={[2, 2, 0, 0]}>
-                          {weekly.map((d, i) => {
-                            const isSelected = d.date === selectedDate;
-                            return (
-                              <Cell
-                                key={i}
-                                cursor="pointer"
-                                onClick={() => selectDate(d.date)}
-                                stroke={isSelected ? COLOR.ink : "none"}
-                                strokeWidth={isSelected ? 2 : 0}
-                                fill={
-                                  isSelected
-                                    ? (d.calories > goal ? "#B91C1C" : COLOR.ink)
-                                    : (d.calories > goal ? COLOR.brick : COLOR.turmeric)
-                                }
-                              />
-                            );
-                          })}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        )}
-      </div>
-      {/* Calorie Reference Book Modal */}
       {showRefModal && (
-        <div
-          style={{ background: "rgba(0, 0, 0, 0.4)" }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4"
-        >
-          <div
-            style={{ background: COLOR.paper, border: `2px solid ${COLOR.ink}` }}
-            className="w-full max-w-xl p-4 md:p-5 rounded-lg shadow-xl max-h-[85vh] flex flex-col text-sm"
-          >
+        <div style={{ background: "rgba(0, 0, 0, 0.4)" }} className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4">
+          <div style={{ background: COLOR.paper, border: `2px solid ${COLOR.ink}` }} className="w-full max-w-xl p-4 md:p-5 rounded-lg shadow-xl max-h-[85vh] flex flex-col text-sm">
             <div className="flex items-center justify-between border-b pb-2 mb-3">
-              <div>
-                <span className="font-semibold text-base" style={{ color: COLOR.ink }}>
-                  📖 한눈에 보는 칼로리 백과 참고표
-                </span>
-                <div style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>
-                  💡 항목을 누르면 현재 입력칸에 음식명과 칼로리가 바로 채워집니다
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowRefModal(false)}
-                style={{ color: COLOR.inkDim, fontSize: "0.9rem" }}
-                className="px-2 py-0.5 hover:opacity-80 font-bold"
-              >
-                ✕
-              </button>
+              <div><span className="font-semibold text-base" style={{ color: COLOR.ink }}>📖 한눈에 보는 칼로리 백과 참고표</span><div style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>💡 항목을 누르면 현재 입력칸에 음식명과 칼로리가 바로 채워집니다</div></div>
+              <button type="button" onClick={() => setShowRefModal(false)} style={{ color: COLOR.inkDim, fontSize: "0.9rem" }} className="px-2 py-0.5 hover:opacity-80 font-bold">✕</button>
             </div>
-
-            {/* 실시간 검색창 */}
             <div className="mb-3">
-              <input
-                type="text"
-                value={refSearch}
-                onChange={(e) => setRefSearch(e.target.value)}
-                placeholder="🔍 참고표 내 음식 빠른 검색 (예: 찌개, 삼겹살, 라면...)"
-                style={{ border: `1px solid ${COLOR.line}`, background: "white" }}
-                className="w-full px-3 py-1.5 text-xs rounded"
-              />
+              <input type="text" value={refSearch} onChange={(e) => setRefSearch(e.target.value)} placeholder="🔍 참고표 내 음식 빠른 검색 (예: 찌개, 삼겹살, 라면...)" style={{ border: `1px solid ${COLOR.line}`, background: "white" }} className="w-full px-3 py-1.5 text-xs rounded" />
             </div>
-
-            {/* 카테고리 탭 */}
             <div className="flex flex-wrap gap-1 mb-3 pb-1 border-b">
               {CALORIE_REFERENCE_CATEGORIES.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setRefCat(c.id)}
-                  style={{
-                    fontFamily: "'Jua', sans-serif",
-                    fontSize: "0.75rem",
-                    border: `1px solid ${refCat === c.id ? COLOR.ink : COLOR.line}`,
-                    background: refCat === c.id ? COLOR.ink : "transparent",
-                    color: refCat === c.id ? COLOR.paper : COLOR.inkDim,
-                  }}
-                  className="px-2 py-1 rounded transition-colors"
-                >
-                  {c.label}
-                </button>
+                <button key={c.id} onClick={() => setRefCat(c.id)} style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.75rem", border: `1px solid ${refCat === c.id ? COLOR.ink : COLOR.line}`, background: refCat === c.id ? COLOR.ink : "transparent", color: refCat === c.id ? COLOR.paper : COLOR.inkDim }} className="px-2 py-1 rounded transition-colors">{c.label}</button>
               ))}
             </div>
-
-            {/* 음식 리스트 목록 */}
             <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {CALORIE_REFERENCE_ITEMS.filter((item) => {
                 const matchCat = refCat === "all" || item.cat === refCat;
-                const matchQuery =
-                  !refSearch.trim() || item.name.toLowerCase().includes(refSearch.trim().toLowerCase());
+                const matchQuery = !refSearch.trim() || item.name.toLowerCase().includes(refSearch.trim().toLowerCase());
                 return matchCat && matchQuery;
               }).map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => selectRefFood(item)}
-                  style={{ border: `1px solid ${COLOR.line}`, background: "white" }}
-                  className="flex items-center justify-between p-2 rounded text-left hover:border-amber-500 hover:bg-amber-50 transition-colors"
-                >
+                <button key={item.name} onClick={() => selectRefFood(item)} style={{ border: `1px solid ${COLOR.line}`, background: "white" }} className="flex items-center justify-between p-2 rounded text-left hover:border-amber-500 hover:bg-amber-50 transition-colors">
                   <span className="font-medium text-xs text-slate-800">{item.name}</span>
-                  <span
-                    style={{ fontFamily: "'Jua', sans-serif", color: COLOR.brick }}
-                    className="text-xs font-semibold"
-                  >
-                    {item.cal} kcal
-                  </span>
+                  <span style={{ fontFamily: "'Jua', sans-serif", color: COLOR.brick }} className="text-xs font-semibold">{item.cal} kcal</span>
                 </button>
               ))}
             </div>
-
             <div className="flex justify-end pt-3 border-t mt-3">
-              <button
-                type="button"
-                onClick={() => setShowRefModal(false)}
-                style={{
-                  color: COLOR.inkDim,
-                  fontSize: "0.75rem",
-                  border: `1px solid ${COLOR.line}`,
-                }}
-                className="px-3 py-1 rounded hover:bg-gray-100"
-              >
-                닫기
-              </button>
+              <button type="button" onClick={() => setShowRefModal(false)} style={{ color: COLOR.inkDim, fontSize: "0.75rem", border: `1px solid ${COLOR.line}` }} className="px-3 py-1 rounded hover:bg-gray-100">닫기</button>
             </div>
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+// ==========================================
+// 🚀 Main Application Component (관제탑)
+// ==========================================
+
+export default function CalorieJournal() {
+  const [selectedDate, setSelectedDate] = useState(todayStr());
+  const [isHalf, setIsHalf] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [profileDraft, setProfileDraft] = useState(DEFAULT_PROFILE);
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [entries, setEntries] = useState([]);
+  const [weekly, setWeekly] = useState([]);
+  const [input, setInput] = useState("");
+  const [mode, setMode] = useState(null); // null | 'search' | 'log' | 'manual'
+  const [manualName, setManualName] = useState("");
+  const [manualCal, setManualCal] = useState("");
+  const [showRefModal, setShowRefModal] = useState(false);
+  const [refCat, setRefCat] = useState("all");
+  const [refSearch, setRefSearch] = useState("");
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [searchResult, setSearchResult] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [logSuggestions, setLogSuggestions] = useState([]);
+  const [showWeekly, setShowWeekly] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === "accepted") setDeferredPrompt(null);
+    } else {
+      alert("📱 [스마트폰 앱 바로가기 안내]\n\n🤖 안드로이드: [다른 브라우저로 열기] ➔ [설치 및 바로가기 만들기]\n🍎 아이폰 (Safari): 하단 공유 ➔ [홈 화면에 추가]");
+    }
+  };
+
+  const loadEntriesForDate = useCallback((ds) => {
+    try { const raw = localStorage.getItem(`foodlog:${ds}`); setEntries(raw ? JSON.parse(raw) : []); } 
+    catch { setEntries([]); }
+  }, []);
+
+  const selectDate = useCallback((ds) => { setSelectedDate(ds); loadEntriesForDate(ds); }, [loadEntriesForDate]);
+  const loadToday = useCallback(async () => { loadEntriesForDate(selectedDate); }, [loadEntriesForDate, selectedDate]);
+
+  const loadWeekly = useCallback(async () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const ds = dateStrOffset(i);
+      let sum = 0;
+      try {
+        const raw = localStorage.getItem(`foodlog:${ds}`);
+        if (raw) sum = JSON.parse(raw).reduce((s, e) => s + e.calories, 0);
+      } catch { sum = 0; }
+      const d = new Date(ds);
+      days.push({ date: ds, label: `${d.getMonth() + 1}/${d.getDate()}`, calories: sum });
+    }
+    setWeekly(days);
+  }, []);
+
+  const loadProfile = useCallback(async () => {
+    try {
+      const raw = localStorage.getItem("profile");
+      if (raw) { const p = JSON.parse(raw); setProfile(p); setProfileDraft(p); } 
+      else { setShowProfileForm(true); }
+    } catch { setShowProfileForm(true); }
+  }, []);
+
+  useEffect(() => {
+    (async () => { await Promise.all([loadToday(), loadWeekly(), loadProfile()]); setReady(true); })();
+  }, [loadToday, loadWeekly, loadProfile]);
+
+  async function saveProfile() {
+    setProfile(profileDraft);
+    setShowProfileForm(false);
+    try { localStorage.setItem("profile", JSON.stringify(profileDraft)); } catch {}
+  }
+
+  function selectRefFood(item) {
+    if (mode === "manual") {
+      setManualName(item.name); setManualCal(String(item.cal));
+    } else {
+      setSearchText(item.name);
+      setSearchResult({ name: isHalf ? `${item.name} (1/2)` : item.name, calories: isHalf ? Math.round(item.cal * 0.5) : item.cal, source: "db" });
+    }
+    setShowRefModal(false);
+  }
+
+  async function doSearch() {
+    if (!searchText.trim() || searchLoading) return;
+    setSearchLoading(true); setSearchResult(null);
+    let result = matchLocalFood(searchText) || await estimateWithAI(searchText);
+    if (isHalf) result = { ...result, name: `${result.name} (1/2)`, calories: Math.round(result.calories * 0.5) };
+    setSearchResult(result); setSearchLoading(false);
+  }
+
+  async function addEntry() {
+    if (!input.trim() || loading) return;
+    setLoading(true);
+    let result = matchLocalFood(input) || await estimateWithAI(input);
+    let finalCal = isHalf ? Math.round(result.calories * 0.5) : result.calories;
+    let finalName = isHalf ? `${result.name} (1/2)` : result.name;
+    const now = new Date();
+    const entry = { id: Date.now(), name: finalName, calories: finalCal, meal: getAutoMeal(now), source: result.source, time: now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }) };
+    const next = [...entries, entry];
+    setEntries(next); setInput(""); setLogSuggestions([]); setIsHalf(false); setLoading(false);
+    try { localStorage.setItem(`foodlog:${selectedDate}`, JSON.stringify(next)); } catch {}
+    loadWeekly();
+  }
+
+  async function addManualEntry() {
+    if (!manualName.trim() || !manualCal) return;
+    const rawCal = Number(manualCal);
+    if (isNaN(rawCal) || rawCal <= 0) return;
+    let finalCal = Math.round(rawCal);
+    let finalName = manualName.trim();
+    if (isHalf) { finalCal = Math.round(finalCal * 0.5); finalName = `${finalName} (1/2)`; }
+    const now = new Date();
+    const entry = { id: Date.now(), name: finalName, calories: finalCal, meal: getAutoMeal(now), source: "manual", time: now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }) };
+    const next = [...entries, entry];
+    setEntries(next); setManualName(""); setManualCal(""); setIsHalf(false); setMode(null);
+    try { localStorage.setItem(`foodlog:${selectedDate}`, JSON.stringify(next)); } catch {}
+    loadWeekly();
+  }
+
+  async function deleteEntry(id) {
+    const next = entries.filter((e) => e.id !== id);
+    setEntries(next);
+    try { localStorage.setItem(`foodlog:${selectedDate}`, JSON.stringify(next)); } catch {}
+    loadWeekly();
+  }
+
+  const goalInfo = profile ? calcGoalCalories(profile) : null;
+  const goal = goalInfo ? goalInfo.goalCal : 2000;
+  const total = entries.reduce((s, e) => s + e.calories, 0);
+
+  return (
+    <div style={{ background: COLOR.paper, color: COLOR.ink, minHeight: "100%", fontFamily: "'Jua', 'Gowun Dodum', sans-serif" }} className="w-full max-w-2xl mx-auto p-4 md:p-6">
+      <Header todayStr={todayStr()} onInstallApp={handleInstallApp} onShowProfile={() => setShowProfileForm(true)} />
+      
+      <Modals 
+        showProfileForm={showProfileForm} setShowProfileForm={setShowProfileForm} profile={profile} profileDraft={profileDraft} setProfileDraft={setProfileDraft} saveProfile={saveProfile} goalInfo={goalInfo}
+        showRefModal={showRefModal} setShowRefModal={setShowRefModal} refSearch={refSearch} setRefSearch={setRefSearch} refCat={refCat} setRefCat={setRefCat} selectRefFood={selectRefFood}
+      />
+
+      <HeroGauge total={total} goal={goal} />
+
+      <InputSection 
+        mode={mode} setMode={setMode} isHalf={isHalf} setIsHalf={setIsHalf}
+        manualName={manualName} setManualName={setManualName} manualCal={manualCal} setManualCal={setManualCal} addManualEntry={addManualEntry} setShowRefModal={setShowRefModal}
+        searchText={searchText} setSearchText={setSearchText} searchSuggestions={searchSuggestions} setSearchSuggestions={setSearchSuggestions} doSearch={doSearch} searchLoading={searchLoading} searchResult={searchResult} setSearchResult={setSearchResult}
+        input={input} setInput={setInput} logSuggestions={logSuggestions} setLogSuggestions={setLogSuggestions} addEntry={addEntry} loading={loading}
+      />
+
+      <LogList entries={entries} selectedDate={selectedDate} ready={ready} todayString={todayStr()} onSelectDate={selectDate} onDeleteEntry={deleteEntry} />
+
+      <WeeklyChart showWeekly={showWeekly} setShowWeekly={setShowWeekly} weekly={weekly} goal={goal} selectedDate={selectedDate} selectDate={selectDate} />
     </div>
   );
 }
