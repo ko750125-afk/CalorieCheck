@@ -979,53 +979,67 @@ export default function CalorieJournal() {
       </div>
 
       {/* Weekly chart */}
-      <div>
-        <div
-          style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
-          className="mb-2"
-        >
-          최근 7일 추이
-        </div>
-        <div style={{ width: "100%", height: 160 }}>
-          <ResponsiveContainer>
-            <BarChart data={weekly} margin={{ top: 12, right: 4, left: -20, bottom: 0 }}>
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 11, fill: COLOR.inkDim }}
-                axisLine={{ stroke: COLOR.line }}
-                tickLine={false}
-              />
-              <YAxis tick={{ fontSize: 10, fill: COLOR.inkDim }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{
-                  background: COLOR.paper,
-                  border: `1px solid ${COLOR.line}`,
-                  fontSize: "0.8rem",
-                }}
-              />
-              <ReferenceLine
-                y={goal}
-                stroke={COLOR.brick}
-                strokeWidth={1.5}
-                label={{
-                  value: `목표 ${goal.toLocaleString()}kcal`,
-                  fill: COLOR.brick,
-                  fontSize: 10,
-                  position: "top",
-                }}
-              />
-              <Bar dataKey="calories" radius={[2, 2, 0, 0]}>
-                {weekly.map((d, i) => (
-                  <Cell
-                    key={i}
-                    fill={d.calories > goal ? COLOR.brick : COLOR.turmeric}
+      {(() => {
+        const maxCalorieInWeekly = Math.max(...weekly.map((d) => d.calories || 0), 0);
+        const yMax = Math.ceil(Math.max(maxCalorieInWeekly, goal || 2000) * 1.15);
+        return (
+          <div>
+            <div
+              style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
+              className="mb-2"
+            >
+              최근 7일 추이
+            </div>
+            <div style={{ width: "100%", height: 170 }}>
+              <ResponsiveContainer>
+                <BarChart data={weekly} margin={{ top: 16, right: 4, left: -15, bottom: 0 }}>
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 11, fill: COLOR.inkDim }}
+                    axisLine={{ stroke: COLOR.line }}
+                    tickLine={false}
                   />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+                  <YAxis
+                    domain={[0, yMax]}
+                    tick={{ fontSize: 10, fill: COLOR.inkDim }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: COLOR.paper,
+                      border: `1px solid ${COLOR.line}`,
+                      fontSize: "0.8rem",
+                    }}
+                  />
+                  {goal > 0 && (
+                    <ReferenceLine
+                      y={goal}
+                      stroke={COLOR.brick}
+                      strokeWidth={2}
+                      label={{
+                        value: `목표 ${goal.toLocaleString()}kcal`,
+                        fill: COLOR.brick,
+                        fontSize: 10,
+                        position: "top",
+                        fontWeight: 600,
+                      }}
+                    />
+                  )}
+                  <Bar dataKey="calories" radius={[2, 2, 0, 0]}>
+                    {weekly.map((d, i) => (
+                      <Cell
+                        key={i}
+                        fill={d.calories > goal ? COLOR.brick : COLOR.turmeric}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
