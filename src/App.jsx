@@ -543,7 +543,14 @@ export default function CalorieJournal() {
         setDeferredPrompt(null);
       }
     } else {
-      alert("📱 [홈 화면에 앱 추가 방법]\n\n1. 아이폰(Safari): 하단 공유 버튼 ➔ [홈 화면에 추가]\n2. 안드로이드(Chrome): 오른쪽 상단 메뉴 ➔ [앱 설치] 또는 [홈 화면에 추가]");
+      alert(
+        "📱 [스마트폰 홈 화면에 앱 바로가기/설치 안내]\n\n" +
+        "🤖 안드로이드 (카카오톡 등으로 접속 시):\n" +
+        "1. 오른쪽 아래 메뉴(⋮ 또는 ⋯) ➔ [다른 브라우저로 열기] 선택\n" +
+        "2. 오른쪽 상단 메뉴(⋮) ➔ [설치 및 바로가기 만들기] 클릭!\n\n" +
+        "🍎 아이폰 (Safari):\n" +
+        "하단 공유 버튼 ➔ [홈 화면에 추가] 클릭!"
+      );
     }
   };
   const [searchText, setSearchText] = useState("");
