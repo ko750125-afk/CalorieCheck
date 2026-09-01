@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Tooltip,
   Cell,
+  ReferenceLine,
 } from "recharts";
 
 // ---------- Design tokens ----------
@@ -987,7 +988,7 @@ export default function CalorieJournal() {
         </div>
         <div style={{ width: "100%", height: 160 }}>
           <ResponsiveContainer>
-            <BarChart data={weekly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+            <BarChart data={weekly} margin={{ top: 12, right: 4, left: -20, bottom: 0 }}>
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 11, fill: COLOR.inkDim }}
@@ -1002,17 +1003,22 @@ export default function CalorieJournal() {
                   fontSize: "0.8rem",
                 }}
               />
+              <ReferenceLine
+                y={goal}
+                stroke={COLOR.brick}
+                strokeWidth={1.5}
+                label={{
+                  value: `목표 ${goal.toLocaleString()}kcal`,
+                  fill: COLOR.brick,
+                  fontSize: 10,
+                  position: "top",
+                }}
+              />
               <Bar dataKey="calories" radius={[2, 2, 0, 0]}>
                 {weekly.map((d, i) => (
                   <Cell
                     key={i}
-                    fill={
-                      d.calories > goal * 1.05
-                        ? COLOR.brick
-                        : d.calories > goal * 0.85
-                        ? COLOR.turmeric
-                        : COLOR.olive
-                    }
+                    fill={d.calories > goal ? COLOR.brick : COLOR.turmeric}
                   />
                 ))}
               </Bar>
