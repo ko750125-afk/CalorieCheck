@@ -25,7 +25,7 @@ const COLOR = {
   olive: "#4F6B3A",
 };
 
-const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');`;
+const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap');`;
 
 // ---------- Local food DB (hybrid: tier 1) ----------
 const FOOD_DB = [
@@ -605,7 +605,7 @@ export default function CalorieJournal() {
         background: COLOR.paper,
         color: COLOR.ink,
         minHeight: "100%",
-        fontFamily: "'Source Serif 4', serif",
+        fontFamily: "'Jua', 'Gowun Dodum', sans-serif",
       }}
       className="w-full max-w-2xl mx-auto p-4 md:p-6"
     >
@@ -615,7 +615,7 @@ export default function CalorieJournal() {
       <div style={{ borderBottom: `3px solid ${COLOR.ink}` }} className="pb-2 mb-1">
         <h1
           style={{
-            fontFamily: "'Oswald', sans-serif",
+            fontFamily: "'Jua', sans-serif",
             letterSpacing: "0.02em",
           }}
           className="text-2xl font-semibold"
@@ -655,7 +655,7 @@ export default function CalorieJournal() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div
-                      style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700 }}
+                      style={{ fontFamily: "'Jua', sans-serif", fontWeight: 700 }}
                       className="text-lg"
                     >
                       {goal.toLocaleString()} kcal
@@ -735,7 +735,7 @@ export default function CalorieJournal() {
                   key={g.value}
                   onClick={() => setProfileDraft({ ...profileDraft, gender: g.value })}
                   style={{
-                    fontFamily: "'Oswald', sans-serif",
+                    fontFamily: "'Jua', sans-serif",
                     fontSize: "0.75rem",
                     border: `1px solid ${
                       profileDraft.gender === g.value ? COLOR.ink : COLOR.line
@@ -779,7 +779,7 @@ export default function CalorieJournal() {
                   key={a.value}
                   onClick={() => setProfileDraft({ ...profileDraft, activity: a.value })}
                   style={{
-                    fontFamily: "'Oswald', sans-serif",
+                    fontFamily: "'Jua', sans-serif",
                     fontSize: "0.7rem",
                     border: `1px solid ${
                       profileDraft.activity === a.value ? COLOR.ink : COLOR.line
@@ -818,7 +818,7 @@ export default function CalorieJournal() {
               <button
                 onClick={saveProfile}
                 style={{
-                  fontFamily: "'Oswald', sans-serif",
+                  fontFamily: "'Jua', sans-serif",
                   background: COLOR.ink,
                   color: COLOR.paper,
                 }}
@@ -875,7 +875,7 @@ export default function CalorieJournal() {
           >
             <div
               style={{
-                fontFamily: "'Oswald', sans-serif",
+                fontFamily: "'Jua', sans-serif",
                 fontSize: "1.35rem",
                 fontWeight: 700,
                 color: COLOR.ink,
@@ -884,7 +884,7 @@ export default function CalorieJournal() {
             >
               {total.toLocaleString()}
             </div>
-            <div style={{ fontFamily: "'Oswald', sans-serif", color: COLOR.inkDim, fontSize: "0.65rem" }}>
+            <div style={{ fontFamily: "'Jua', sans-serif", color: COLOR.inkDim, fontSize: "0.65rem" }}>
               kcal
             </div>
             <div style={{ color: statusColor, fontSize: "0.7rem", fontWeight: 600, marginTop: "1px" }}>
@@ -894,7 +894,7 @@ export default function CalorieJournal() {
         </div>
         <div className="flex-1 min-w-0">
           <div
-            style={{ color: statusColor, fontFamily: "'Oswald', sans-serif", fontWeight: 600 }}
+            style={{ color: statusColor, fontFamily: "'Jua', sans-serif", fontWeight: 600 }}
             className="text-lg"
           >
             {statusLabel}
@@ -922,7 +922,7 @@ export default function CalorieJournal() {
                 setIsHalf(false);
               }}
               style={{
-                fontFamily: "'Oswald', sans-serif",
+                fontFamily: "'Jua', sans-serif",
                 background: COLOR.ink,
                 color: COLOR.paper,
               }}
@@ -940,7 +940,7 @@ export default function CalorieJournal() {
                 setIsHalf(false);
               }}
               style={{
-                fontFamily: "'Oswald', sans-serif",
+                fontFamily: "'Jua', sans-serif",
                 border: `1px solid ${COLOR.line}`,
                 background: COLOR.paperDim,
                 color: COLOR.inkDim,
@@ -959,7 +959,7 @@ export default function CalorieJournal() {
                 setIsHalf(false);
               }}
               style={{
-                fontFamily: "'Oswald', sans-serif",
+                fontFamily: "'Jua', sans-serif",
                 border: `1px solid ${COLOR.line}`,
                 background: "white",
                 color: COLOR.ink,
@@ -974,7 +974,7 @@ export default function CalorieJournal() {
         {mode === "manual" && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}>
+              <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}>
                 ✏️ 칼로리 직접 수동입력
               </span>
               <button
@@ -1009,7 +1009,7 @@ export default function CalorieJournal() {
                   onClick={addManualEntry}
                   disabled={!manualName.trim() || !manualCal}
                   style={{
-                    fontFamily: "'Oswald', sans-serif",
+                    fontFamily: "'Jua', sans-serif",
                     background: !manualName.trim() || !manualCal ? COLOR.inkDim : COLOR.ink,
                     color: COLOR.paper,
                   }}
@@ -1043,7 +1043,7 @@ export default function CalorieJournal() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <span
-                style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.turmeric }}
+                style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.turmeric }}
               >
                 칼로리만 계산 · 기록되지 않음
               </span>
@@ -1106,7 +1106,7 @@ export default function CalorieJournal() {
                 onClick={doSearch}
                 disabled={searchLoading}
                 style={{
-                  fontFamily: "'Oswald', sans-serif",
+                  fontFamily: "'Jua', sans-serif",
                   border: `1px solid ${COLOR.ink}`,
                   color: COLOR.ink,
                 }}
@@ -1145,7 +1145,7 @@ export default function CalorieJournal() {
                     </span>
                   )}
                 </span>
-                <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600 }}>
+                <span style={{ fontFamily: "'Jua', sans-serif", fontWeight: 600 }}>
                   {searchResult.calories} kcal
                 </span>
               </div>
@@ -1156,7 +1156,7 @@ export default function CalorieJournal() {
         {mode === "log" && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}>
+              <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}>
                 식사 기록하기
               </span>
               <button
@@ -1225,7 +1225,7 @@ export default function CalorieJournal() {
                 onClick={addEntry}
                 disabled={loading}
                 style={{
-                  fontFamily: "'Oswald', sans-serif",
+                  fontFamily: "'Jua', sans-serif",
                   background: loading ? COLOR.inkDim : COLOR.ink,
                   color: COLOR.paper,
                 }}
@@ -1263,7 +1263,7 @@ export default function CalorieJournal() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <div
-            style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}
+            style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}
             className="font-semibold"
           >
             {selectedDate === todayStr() ? "오늘 기록" : `${selectedDate} 기록`} ({entries.length})
@@ -1295,7 +1295,7 @@ export default function CalorieJournal() {
                 <div className="flex items-center gap-3">
                   <span
                     style={{
-                      fontFamily: "'Oswald', sans-serif",
+                      fontFamily: "'Jua', sans-serif",
                       fontSize: "0.65rem",
                       color: COLOR.inkDim,
                       width: "34px",
@@ -1332,7 +1332,7 @@ export default function CalorieJournal() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <div
-                style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
+                style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
               >
                 최근 7일 추이
               </div>
