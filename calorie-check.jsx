@@ -791,7 +791,7 @@ export default function CalorieJournal() {
               }}
               className="flex-[2.5] py-3 px-4 text-sm font-medium flex items-center justify-center gap-1.5 hover:opacity-90"
             >
-              <span>✏️ 오늘 먹은 음식 기록하기</span>
+              <span>✏️ 뭐 먹었더라?</span>
             </button>
 
             {/* 보조 버튼 (Secondary Ghost Button) */}
@@ -809,7 +809,7 @@ export default function CalorieJournal() {
               }}
               className="flex-1 py-3 px-2 text-xs flex items-center justify-center gap-1 hover:bg-gray-200 transition-colors"
             >
-              <span>🔍 단순 검색</span>
+              <span>🔍 칼로리만 계산</span>
             </button>
           </div>
         )}
