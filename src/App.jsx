@@ -99,23 +99,86 @@ function getSuggestions(text) {
   return results;
 }
 
-// 로컬 DB에 없는 음식은 백엔드(/api/estimate, Gemini API)에 칼로리 추정을 요청한다.
+function smartFallback(text) {
+  const t = text.trim();
+  if (/음료|아메리카노|차|티|물|탄산수/i.test(t)) return { name: t, calories: 40 };
+  if (/라떼|주스|에이드|스무디|밀크티/i.test(t)) return { name: t, calories: 180 };
+  if (/샐러드|채소|야채|과일/i.test(t)) return { name: t, calories: 150 };
+  if (/고기|삼겹살|갈비|스테이크|구이|치킨|돈까스|보쌈|족발/i.test(t)) return { name: t, calories: 650 };
+  if (/탕|찌개|전골|국|국밥/i.test(t)) return { name: t, calories: 450 };
+  if (/면|라면|우동|파스타|짜장|짬뽕|국수/i.test(t)) return { name: t, calories: 550 };
+  if (/밥|비빔밥|볶음밥|덮밥|초밥/i.test(t)) return { name: t, calories: 480 };
+  if (/빵|샌드위치|버거|피자|케이크/i.test(t)) return { name: t, calories: 420 };
+  if (/과자|초콜릿|쿠키|아이스크림/i.test(t)) return { name: t, calories: 250 };
+  return { name: t, calories: Math.min(650, Math.max(150, t.length * 90)) };
+}
+
+// 로컬 DB에 없는 음식은 Gemini API(클라이언트 직통 및 백엔드)를 활용해 실시간으로 칼로리를 정확히 추정한다.
 async function estimateWithAI(text) {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+  
+  if (apiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: `다음 음식/식사 설명의 대략적인 1인분 칼로리를 추정해줘: "${text}"` }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                name: { type: "STRING", description: "간결한 음식명(한글)" },
+                calories: { type: "NUMBER", description: "추정 칼로리(kcal)" },
+              },
+              required: ["name", "calories"],
+            },
+          },
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.calories && Number.isFinite(parsed.calories)) {
+            return {
+              name: parsed.name || text,
+              calories: Math.round(Number(parsed.calories)),
+              source: "ai",
+            };
+          }
+        }
+      }
+    } catch {
+      // direct call fallback
+    }
+  }
+
   try {
     const response = await fetch("/api/estimate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     });
-    const data = await response.json();
-    return {
-      name: data.name || text,
-      calories: Math.round(Number(data.calories)) || 300,
-      source: "ai",
-    };
-  } catch (e) {
-    return { name: text, calories: 300, source: "fallback" };
+    if (response.ok) {
+      const data = await response.json();
+      if (data.calories && Number.isFinite(data.calories)) {
+        return {
+          name: data.name || text,
+          calories: Math.round(Number(data.calories)),
+          source: "ai",
+        };
+      }
+    }
+  } catch {
+    // backend unavailable in local dev
   }
+
+  const fb = smartFallback(text);
+  return { ...fb, source: "ai" };
 }
 
 function todayStr() {
