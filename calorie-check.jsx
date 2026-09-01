@@ -1157,8 +1157,8 @@ export default function CalorieJournal() {
                 value={manualName}
                 onChange={(e) => setManualName(e.target.value)}
                 placeholder="음식 이름 (예: 엄마표 볶음밥)"
-                style={{ border: `1px solid ${COLOR.line}`, background: "white", fontSize: "16px" }}
-                className="w-full px-3 py-2"
+                style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }}
+                className="w-full px-3 py-2 rounded"
               />
               <div className="flex gap-2">
                 <input
@@ -1166,8 +1166,8 @@ export default function CalorieJournal() {
                   value={manualCal}
                   onChange={(e) => setManualCal(e.target.value)}
                   placeholder="칼로리 (kcal)"
-                  style={{ border: `1px solid ${COLOR.line}`, background: "white", fontSize: "16px" }}
-                  className="w-full px-3 py-2"
+                  style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }}
+                  className="w-full px-3 py-2 rounded"
                 />
                 <button
                   onClick={addManualEntry}
@@ -1247,8 +1247,8 @@ export default function CalorieJournal() {
                   }}
                   onKeyDown={(e) => e.key === "Enter" && doSearch()}
                   placeholder="음식 이름 검색 (예: 삼겹살)"
-                  style={{ border: `1px solid ${COLOR.line}`, background: "white", fontSize: "16px" }}
-                  className="w-full px-3 py-2"
+                  style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }}
+                  className="w-full px-3 py-2 rounded"
                 />
                 {searchSuggestions.length > 0 && (
                   <div
@@ -1369,8 +1369,8 @@ export default function CalorieJournal() {
                   }}
                   onKeyDown={(e) => e.key === "Enter" && addEntry()}
                   placeholder="음식 이름 입력 (예: 김치찌개)"
-                  style={{ border: `1px solid ${COLOR.line}`, background: "white", fontSize: "16px" }}
-                  className="w-full px-3 py-2"
+                  style={{ border: `2px solid ${COLOR.ink}`, background: "white", fontSize: "16px" }}
+                  className="w-full px-3 py-2 rounded"
                 />
                 {logSuggestions.length > 0 && (
                   <div
