@@ -275,6 +275,7 @@ function generateDummyDayEntries(dateStr, seed) {
 }
 
 export default function CalorieJournal() {
+  const [selectedDate, setSelectedDate] = useState(todayStr());
   const [profile, setProfile] = useState(null);
   const [profileDraft, setProfileDraft] = useState(DEFAULT_PROFILE);
   const [showProfileForm, setShowProfileForm] = useState(false);
@@ -291,14 +292,23 @@ export default function CalorieJournal() {
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
-  const loadToday = useCallback(async () => {
+  const loadEntriesForDate = useCallback((ds) => {
     try {
-      const raw = localStorage.getItem(`foodlog:${todayStr()}`);
+      const raw = localStorage.getItem(`foodlog:${ds}`);
       setEntries(raw ? JSON.parse(raw) : []);
     } catch {
       setEntries([]);
     }
   }, []);
+
+  const selectDate = useCallback((ds) => {
+    setSelectedDate(ds);
+    loadEntriesForDate(ds);
+  }, [loadEntriesForDate]);
+
+  const loadToday = useCallback(async () => {
+    loadEntriesForDate(selectedDate);
+  }, [loadEntriesForDate, selectedDate]);
 
   const loadWeekly = useCallback(async () => {
     const days = [];
@@ -411,7 +421,7 @@ export default function CalorieJournal() {
     setLogSuggestions([]);
     setLoading(false);
     try {
-      localStorage.setItem(`foodlog:${todayStr()}`, JSON.stringify(next));
+      localStorage.setItem(`foodlog:${selectedDate}`, JSON.stringify(next));
     } catch {
       // storage failed, keep in-memory state
     }
@@ -422,7 +432,7 @@ export default function CalorieJournal() {
     const next = entries.filter((e) => e.id !== id);
     setEntries(next);
     try {
-      localStorage.setItem(`foodlog:${todayStr()}`, JSON.stringify(next));
+      localStorage.setItem(`foodlog:${selectedDate}`, JSON.stringify(next));
     } catch {
       // storage failed, keep in-memory state
     }
@@ -915,15 +925,28 @@ export default function CalorieJournal() {
 
       {/* Today's list */}
       <div className="mb-6">
-        <div
-          style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
-          className="mb-2"
-        >
-          오늘 기록 ({entries.length})
+        <div className="flex items-center justify-between mb-2">
+          <div
+            style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}
+            className="font-semibold"
+          >
+            {selectedDate === todayStr() ? "오늘 기록" : `${selectedDate} 기록`} ({entries.length})
+          </div>
+          {selectedDate !== todayStr() && (
+            <button
+              onClick={() => selectDate(todayStr())}
+              style={{ color: COLOR.olive, fontSize: "0.75rem" }}
+              className="font-semibold underline hover:opacity-80"
+            >
+              오늘로 돌아가기 ↩
+            </button>
+          )}
         </div>
         {entries.length === 0 && !ready ? null : entries.length === 0 ? (
           <div style={{ color: COLOR.inkDim, fontSize: "0.85rem" }} className="py-4">
-            아직 기록이 없습니다. 위에서 먹은 음식을 입력해보세요.
+            {selectedDate === todayStr()
+              ? "아직 기록이 없습니다. 위에서 먹은 음식을 입력해보세요."
+              : `${selectedDate}에 등록된 식사 기록이 없습니다.`}
           </div>
         ) : (
           <div>
@@ -971,15 +994,28 @@ export default function CalorieJournal() {
         const yMax = Math.ceil(Math.max(maxCalorieInWeekly, goal || 2000) * 1.15);
         return (
           <div>
-            <div
-              style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
-              className="mb-2"
-            >
-              최근 7일 추이
+            <div className="flex items-center justify-between mb-2">
+              <div
+                style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.inkDim }}
+              >
+                최근 7일 추이
+              </div>
+              <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
+                💡 막대를 클릭하여 해당 날짜 기록 확인
+              </span>
             </div>
             <div style={{ width: "100%", height: 170 }}>
               <ResponsiveContainer>
-                <BarChart data={weekly} margin={{ top: 16, right: 4, left: -15, bottom: 0 }}>
+                <BarChart
+                  data={weekly}
+                  margin={{ top: 16, right: 4, left: -15, bottom: 0 }}
+                  onClick={(state) => {
+                    if (state && state.activePayload && state.activePayload.length) {
+                      const targetDate = state.activePayload[0].payload.date;
+                      if (targetDate) selectDate(targetDate);
+                    }
+                  }}
+                >
                   <XAxis
                     dataKey="label"
                     tick={{ fontSize: 11, fill: COLOR.inkDim }}
@@ -1014,12 +1050,23 @@ export default function CalorieJournal() {
                     />
                   )}
                   <Bar dataKey="calories" radius={[2, 2, 0, 0]}>
-                    {weekly.map((d, i) => (
-                      <Cell
-                        key={i}
-                        fill={d.calories > goal ? COLOR.brick : COLOR.turmeric}
-                      />
-                    ))}
+                    {weekly.map((d, i) => {
+                      const isSelected = d.date === selectedDate;
+                      return (
+                        <Cell
+                          key={i}
+                          cursor="pointer"
+                          onClick={() => selectDate(d.date)}
+                          stroke={isSelected ? COLOR.ink : "none"}
+                          strokeWidth={isSelected ? 2 : 0}
+                          fill={
+                            isSelected
+                              ? (d.calories > goal ? "#B91C1C" : COLOR.ink)
+                              : (d.calories > goal ? COLOR.brick : COLOR.turmeric)
+                          }
+                        />
+                      );
+                    })}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
