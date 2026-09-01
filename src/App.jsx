@@ -264,6 +264,125 @@ const ACTIVITY_LEVELS = [
   { value: "active", label: "활발한 활동 (x1.725)", mult: 1.725, desc: "BMR x 1.725" },
 ];
 
+const CALORIE_REFERENCE_CATEGORIES = [
+  { id: "all", label: "전체" },
+  { id: "rice", label: "🍚 밥/죽/덮밥" },
+  { id: "soup", label: "🍲 찌개/국/탕" },
+  { id: "meat", label: "🥩 고기/구이/찜" },
+  { id: "noodle", label: "🍜 면/분식/튀김" },
+  { id: "bread", label: "🍔 빵/패스트푸드" },
+  { id: "drink", label: "🥤 카페/음료" },
+  { id: "diet", label: "🥗 다이어트/과일" },
+];
+
+const CALORIE_REFERENCE_ITEMS = [
+  // 🍚 밥/죽/덮밥
+  { cat: "rice", name: "쌀밥 (1공기)", cal: 300 },
+  { cat: "rice", name: "잡곡밥 (1공기)", cal: 300 },
+  { cat: "rice", name: "현미밥 (1공기)", cal: 290 },
+  { cat: "rice", name: "비빔밥", cal: 550 },
+  { cat: "rice", name: "일반 김밥 (1줄)", cal: 350 },
+  { cat: "rice", name: "참치 김밥 (1줄)", cal: 480 },
+  { cat: "rice", name: "돈가스 김밥 (1줄)", cal: 500 },
+  { cat: "rice", name: "제육덮밥", cal: 650 },
+  { cat: "rice", name: "불고기덮밥", cal: 620 },
+  { cat: "rice", name: "돈가스덮밥(가츠동)", cal: 700 },
+  { cat: "rice", name: "카레라이스", cal: 680 },
+  { cat: "rice", name: "오므라이스", cal: 650 },
+  { cat: "rice", name: "전복죽", cal: 320 },
+  { cat: "rice", name: "야채죽", cal: 280 },
+  { cat: "rice", name: "삼선볶음밥", cal: 750 },
+
+  // 🍲 찌개/국/탕
+  { cat: "soup", name: "김치찌개 (밥 포함)", cal: 450 },
+  { cat: "soup", name: "된장찌개", cal: 200 },
+  { cat: "soup", name: "순두부찌개", cal: 350 },
+  { cat: "soup", name: "부대찌개", cal: 550 },
+  { cat: "soup", name: "청국장찌개", cal: 250 },
+  { cat: "soup", name: "갈비탕", cal: 500 },
+  { cat: "soup", name: "설렁탕 / 곰탕", cal: 480 },
+  { cat: "soup", name: "삼계탕 (1그릇)", cal: 850 },
+  { cat: "soup", name: "감자탕 / 뼈해장국", cal: 600 },
+  { cat: "soup", name: "마라탕", cal: 700 },
+  { cat: "soup", name: "해물탕", cal: 380 },
+  { cat: "soup", name: "추어탕", cal: 420 },
+  { cat: "soup", name: "소고기무국", cal: 180 },
+  { cat: "soup", name: "미역국", cal: 150 },
+
+  // 🥩 고기/구이/찜
+  { cat: "meat", name: "삼겹살구이 (200g)", cal: 650 },
+  { cat: "meat", name: "돼지양념갈비 (250g)", cal: 750 },
+  { cat: "meat", name: "돼지고기 수육/보쌈 (200g)", cal: 550 },
+  { cat: "meat", name: "족발 (1접시 몫)", cal: 750 },
+  { cat: "meat", name: "소불고기 (200g)", cal: 350 },
+  { cat: "meat", name: "제육볶음 (200g)", cal: 450 },
+  { cat: "meat", name: "닭볶음탕", cal: 600 },
+  { cat: "meat", name: "안동찜닭", cal: 580 },
+  { cat: "meat", name: "곱창구이 / 볶음", cal: 500 },
+  { cat: "meat", name: "우삼겹 / 차돌박이 (150g)", cal: 520 },
+  { cat: "meat", name: "닭발 (1접시)", cal: 420 },
+  { cat: "meat", name: "훈제오리 (200g)", cal: 480 },
+
+  // 🍜 면/분식/튀김
+  { cat: "noodle", name: "봉지 라면 (1봉)", cal: 500 },
+  { cat: "noodle", name: "짜장면", cal: 680 },
+  { cat: "noodle", name: "짬뽕", cal: 550 },
+  { cat: "noodle", name: "칼국수", cal: 550 },
+  { cat: "noodle", name: "잔치국수", cal: 420 },
+  { cat: "noodle", name: "물냉면", cal: 480 },
+  { cat: "noodle", name: "비빔냉면", cal: 520 },
+  { cat: "noodle", name: "쌀국수 (포)", cal: 450 },
+  { cat: "noodle", name: "우동", cal: 400 },
+  { cat: "noodle", name: "떡볶이 (1인분)", cal: 450 },
+  { cat: "noodle", name: "로제 떡볶이 (1인분)", cal: 720 },
+  { cat: "noodle", name: "순대 (1인분)", cal: 350 },
+  { cat: "noodle", name: "모둠 튀김 (1인분)", cal: 400 },
+  { cat: "noodle", name: "길거리 어묵 (2꼬치)", cal: 220 },
+  { cat: "noodle", name: "호떡 (1개)", cal: 260 },
+  { cat: "noodle", name: "붕어빵 (2개)", cal: 240 },
+
+  // 🍔 빵/패스트푸드
+  { cat: "bread", name: "식빵 (1장)", cal: 100 },
+  { cat: "bread", name: "단팥빵 / 소보로빵", cal: 250 },
+  { cat: "bread", name: "크루아상", cal: 250 },
+  { cat: "bread", name: "클럽 샌드위치", cal: 450 },
+  { cat: "bread", name: "기본 햄버거", cal: 400 },
+  { cat: "bread", name: "치즈버거", cal: 500 },
+  { cat: "bread", name: "더블 패티 버거", cal: 700 },
+  { cat: "bread", name: "후라이드 치킨 (1조각)", cal: 250 },
+  { cat: "bread", name: "양념 치킨 (1조각)", cal: 300 },
+  { cat: "bread", name: "피자 (1조각)", cal: 350 },
+  { cat: "bread", name: "감자튀김 (M)", cal: 350 },
+  { cat: "bread", name: "토스트 (계란/치즈)", cal: 380 },
+  { cat: "bread", name: "타코야키 (6개)", cal: 320 },
+  { cat: "bread", name: "크림 파스타 / 스파게티", cal: 750 },
+  { cat: "bread", name: "토마토 파스타", cal: 550 },
+
+  // 🥤 카페/음료
+  { cat: "drink", name: "아메리카노 (아이스/핫)", cal: 10 },
+  { cat: "drink", name: "카페라떼", cal: 180 },
+  { cat: "drink", name: "바닐라라떼 / 카라멜마키아또", cal: 280 },
+  { cat: "drink", name: "생과일주스", cal: 180 },
+  { cat: "drink", name: "식혜 (1컵)", cal: 200 },
+  { cat: "drink", name: "요거트 / 요구르트", cal: 120 },
+  { cat: "drink", name: "콜라 / 사이다 (1캔 355ml)", cal: 150 },
+  { cat: "drink", name: "제로 콜라 / 제로 사이다", cal: 0 },
+  { cat: "drink", name: "이온음료 (포카리/게토레이 1캔)", cal: 80 },
+
+  // 🥗 다이어트/과일
+  { cat: "diet", name: "삶은 계란 (1개)", cal: 70 },
+  { cat: "diet", name: "훈제 닭가슴살 (100g)", cal: 110 },
+  { cat: "diet", name: "두부 (반 모 150g)", cal: 130 },
+  { cat: "diet", name: "닭가슴살 샐러드", cal: 220 },
+  { cat: "diet", name: "사과 (1개)", cal: 100 },
+  { cat: "diet", name: "바나나 (1개)", cal: 90 },
+  { cat: "diet", name: "배 (1개)", cal: 160 },
+  { cat: "diet", name: "방울토마토 (10알)", cal: 30 },
+  { cat: "diet", name: "고구마 (중간 1개)", cal: 180 },
+  { cat: "diet", name: "감자 (중간 1개)", cal: 130 },
+  { cat: "diet", name: "견과류 (하루한봉 25g)", cal: 150 },
+];
+
 const DEFAULT_PROFILE = {
   gender: "female",
   age: "30",
@@ -401,6 +520,9 @@ export default function CalorieJournal() {
   const [mode, setMode] = useState(null); // null | 'search' | 'log' | 'manual'
   const [manualName, setManualName] = useState("");
   const [manualCal, setManualCal] = useState("");
+  const [showRefModal, setShowRefModal] = useState(false);
+  const [refCat, setRefCat] = useState("all");
+  const [refSearch, setRefSearch] = useState("");
   const [searchText, setSearchText] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -479,6 +601,19 @@ export default function CalorieJournal() {
     } catch {
       // ignore save failure, UI already updated
     }
+  }
+
+  function selectRefFood(item) {
+    if (mode === "manual") {
+      setManualName(item.name);
+      setManualCal(String(item.cal));
+    } else {
+      setSearchText(item.name);
+      const finalCal = isHalf ? Math.round(item.cal * 0.5) : item.cal;
+      const finalName = isHalf ? `${item.name} (1/2)` : item.name;
+      setSearchResult({ name: finalName, calories: finalCal, source: "db" });
+    }
+    setShowRefModal(false);
   }
 
 
@@ -951,9 +1086,24 @@ export default function CalorieJournal() {
         {mode === "manual" && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}>
-                ✏️ 칼로리 직접 수동입력
-              </span>
+              <div className="flex items-center gap-2">
+                <span style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}>
+                  ✏️ 칼로리 직접 수동입력
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowRefModal(true)}
+                  style={{
+                    fontFamily: "'Jua', sans-serif",
+                    border: `1px solid ${COLOR.line}`,
+                    background: COLOR.paperDim,
+                    color: COLOR.brick,
+                  }}
+                  className="px-2 py-0.5 text-xs rounded hover:bg-amber-100 transition-colors"
+                >
+                  💡 칼로리 참고표 보기
+                </button>
+              </div>
               <button
                 onClick={() => {
                   setMode(null);
@@ -1019,11 +1169,26 @@ export default function CalorieJournal() {
         {mode === "search" && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span
-                style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.turmeric }}
-              >
-                칼로리만 계산 · 기록되지 않음
-              </span>
+              <div className="flex items-center gap-2">
+                <span
+                  style={{ fontFamily: "'Jua', sans-serif", fontSize: "0.8rem", color: COLOR.turmeric }}
+                >
+                  칼로리만 계산 · 기록되지 않음
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowRefModal(true)}
+                  style={{
+                    fontFamily: "'Jua', sans-serif",
+                    border: `1px solid ${COLOR.line}`,
+                    background: COLOR.paperDim,
+                    color: COLOR.brick,
+                  }}
+                  className="px-2 py-0.5 text-xs rounded hover:bg-amber-100 transition-colors"
+                >
+                  💡 칼로리 참고표 보기
+                </button>
+              </div>
               <button
                 onClick={() => {
                   setMode(null);
@@ -1407,6 +1572,109 @@ export default function CalorieJournal() {
           </div>
         )}
       </div>
+      {/* Calorie Reference Book Modal */}
+      {showRefModal && (
+        <div
+          style={{ background: "rgba(0, 0, 0, 0.4)" }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4"
+        >
+          <div
+            style={{ background: COLOR.paper, border: `2px solid ${COLOR.ink}` }}
+            className="w-full max-w-xl p-4 md:p-5 rounded-lg shadow-xl max-h-[85vh] flex flex-col text-sm"
+          >
+            <div className="flex items-center justify-between border-b pb-2 mb-3">
+              <div>
+                <span className="font-semibold text-base" style={{ color: COLOR.ink }}>
+                  📖 한눈에 보는 칼로리 백과 참고표
+                </span>
+                <div style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>
+                  💡 항목을 누르면 현재 입력칸에 음식명과 칼로리가 바로 채워집니다
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRefModal(false)}
+                style={{ color: COLOR.inkDim, fontSize: "0.9rem" }}
+                className="px-2 py-0.5 hover:opacity-80 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 실시간 검색창 */}
+            <div className="mb-3">
+              <input
+                type="text"
+                value={refSearch}
+                onChange={(e) => setRefSearch(e.target.value)}
+                placeholder="🔍 참고표 내 음식 빠른 검색 (예: 찌개, 삼겹살, 라면...)"
+                style={{ border: `1px solid ${COLOR.line}`, background: "white" }}
+                className="w-full px-3 py-1.5 text-xs rounded"
+              />
+            </div>
+
+            {/* 카테고리 탭 */}
+            <div className="flex flex-wrap gap-1 mb-3 pb-1 border-b">
+              {CALORIE_REFERENCE_CATEGORIES.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setRefCat(c.id)}
+                  style={{
+                    fontFamily: "'Jua', sans-serif",
+                    fontSize: "0.75rem",
+                    border: `1px solid ${refCat === c.id ? COLOR.ink : COLOR.line}`,
+                    background: refCat === c.id ? COLOR.ink : "transparent",
+                    color: refCat === c.id ? COLOR.paper : COLOR.inkDim,
+                  }}
+                  className="px-2 py-1 rounded transition-colors"
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            {/* 음식 리스트 목록 */}
+            <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {CALORIE_REFERENCE_ITEMS.filter((item) => {
+                const matchCat = refCat === "all" || item.cat === refCat;
+                const matchQuery =
+                  !refSearch.trim() || item.name.toLowerCase().includes(refSearch.trim().toLowerCase());
+                return matchCat && matchQuery;
+              }).map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => selectRefFood(item)}
+                  style={{ border: `1px solid ${COLOR.line}`, background: "white" }}
+                  className="flex items-center justify-between p-2 rounded text-left hover:border-amber-500 hover:bg-amber-50 transition-colors"
+                >
+                  <span className="font-medium text-xs text-slate-800">{item.name}</span>
+                  <span
+                    style={{ fontFamily: "'Jua', sans-serif", color: COLOR.brick }}
+                    className="text-xs font-semibold"
+                  >
+                    {item.cal} kcal
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t mt-3">
+              <button
+                type="button"
+                onClick={() => setShowRefModal(false)}
+                style={{
+                  color: COLOR.inkDim,
+                  fontSize: "0.75rem",
+                  border: `1px solid ${COLOR.line}`,
+                }}
+                className="px-3 py-1 rounded hover:bg-gray-100"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
