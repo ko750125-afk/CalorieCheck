@@ -481,7 +481,7 @@ export default function CalorieJournal() {
     if (isHalf) {
       result = {
         ...result,
-        name: `${result.name} (1/2량)`,
+        name: `${result.name} (1/2)`,
         calories: Math.round(result.calories * 0.5),
       };
     }
@@ -500,7 +500,7 @@ export default function CalorieJournal() {
     let finalName = result.name;
     if (isHalf) {
       finalCal = Math.round(finalCal * 0.5);
-      finalName = `${finalName} (1/2량)`;
+      finalName = `${finalName} (1/2)`;
     }
     const now = new Date();
     const entry = {
@@ -960,7 +960,7 @@ export default function CalorieJournal() {
                           setSearchText(s.name);
                           setSearchSuggestions([]);
                           const finalCal = isHalf ? Math.round(s.cal * 0.5) : s.cal;
-                          const finalName = isHalf ? `${s.name} (1/2량)` : s.name;
+                          const finalName = isHalf ? `${s.name} (1/2)` : s.name;
                           setSearchResult({ name: finalName, calories: finalCal, source: "db" });
                         }}
                         style={{ borderBottom: `1px solid ${COLOR.paperDim}` }}
@@ -988,7 +988,7 @@ export default function CalorieJournal() {
                 {searchLoading ? "확인 중…" : "검색"}
               </button>
             </div>
-            {/* 음식을 고른 후 체크하는 1/2량 옵션 */}
+            {/* 음식을 고른 후 체크하는 1/2 옵션 */}
             <div className="mt-2.5 flex items-center justify-between">
               <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
                 <input
@@ -998,7 +998,7 @@ export default function CalorieJournal() {
                   className="w-4 h-4 accent-amber-600 rounded"
                 />
                 <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
-                  🥣 1/2량 섭취 (50% 칼로리로 계산)
+                  🥣 1/2 섭취 (50% 칼로리로 계산)
                 </span>
               </label>
               <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
@@ -1107,7 +1107,7 @@ export default function CalorieJournal() {
                 {loading ? "계산 중…" : "추가"}
               </button>
             </div>
-            {/* 음식을 고른 후 체크하는 1/2량 옵션 */}
+            {/* 음식을 고른 후 체크하는 1/2 옵션 */}
             <div className="mt-2.5 flex items-center justify-between">
               <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
                 <input
@@ -1117,7 +1117,7 @@ export default function CalorieJournal() {
                   className="w-4 h-4 accent-amber-600 rounded"
                 />
                 <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
-                  🥣 1/2량 섭취 (50% 칼로리로 계산)
+                  🥣 1/2 섭취 (50% 칼로리로 계산)
                 </span>
               </label>
               <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
