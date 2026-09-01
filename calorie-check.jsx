@@ -397,7 +397,9 @@ export default function CalorieJournal() {
   const [weekly, setWeekly] = useState([]);
   const [input, setInput] = useState("");
   // meal은 더 이상 수동 선택하지 않고 입력 시각 기준으로 자동 결정됨
-  const [mode, setMode] = useState(null); // null | 'search' | 'log'
+  const [mode, setMode] = useState(null); // null | 'search' | 'log' | 'manual'
+  const [manualName, setManualName] = useState("");
+  const [manualCal, setManualCal] = useState("");
   const [searchText, setSearchText] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -524,6 +526,44 @@ export default function CalorieJournal() {
       await window.storage.set(`foodlog:${selectedDate}`, JSON.stringify(next));
     } catch {
       // storage failed, keep in-memory state
+    }
+    loadWeekly();
+  }
+
+  async function addManualEntry() {
+    if (!manualName.trim() || !manualCal) return;
+    const rawCal = Number(manualCal);
+    if (isNaN(rawCal) || rawCal <= 0) return;
+
+    let finalCal = Math.round(rawCal);
+    let finalName = manualName.trim();
+    if (isHalf) {
+      finalCal = Math.round(finalCal * 0.5);
+      finalName = `${finalName} (1/2)`;
+    }
+
+    const now = new Date();
+    const entry = {
+      id: Date.now(),
+      name: finalName,
+      calories: finalCal,
+      meal: getAutoMeal(now),
+      source: "manual",
+      time: now.toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+    const next = [...entries, entry];
+    setEntries(next);
+    setManualName("");
+    setManualCal("");
+    setIsHalf(false);
+    setMode(null);
+    try {
+      await window.storage.set(`foodlog:${selectedDate}`, JSON.stringify(next));
+    } catch {
+      // storage failed, keep state
     }
     loadWeekly();
   }
@@ -874,7 +914,7 @@ export default function CalorieJournal() {
       {/* Input Mode Selector */}
       <div style={{ borderTop: `1px solid ${COLOR.line}`, borderBottom: `1px solid ${COLOR.line}` }} className="py-4 mb-6">
         {mode === null && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* 주 메인 버튼 (Primary CTA) */}
             <button
               onClick={() => {
@@ -886,7 +926,7 @@ export default function CalorieJournal() {
                 background: COLOR.ink,
                 color: COLOR.paper,
               }}
-              className="flex-[2.5] py-3 px-4 text-sm font-medium flex items-center justify-center gap-1.5 hover:opacity-90"
+              className="flex-[2] py-3 px-3 text-sm font-medium flex items-center justify-center gap-1.5 hover:opacity-90"
             >
               <span>✏️ 뭐 먹었더라?</span>
             </button>
@@ -909,6 +949,93 @@ export default function CalorieJournal() {
             >
               <span>🔍 칼로리만 계산</span>
             </button>
+
+            {/* 수동 직접 입력 버튼 */}
+            <button
+              onClick={() => {
+                setMode("manual");
+                setManualName("");
+                setManualCal("");
+                setIsHalf(false);
+              }}
+              style={{
+                fontFamily: "'Oswald', sans-serif",
+                border: `1px solid ${COLOR.line}`,
+                background: "white",
+                color: COLOR.ink,
+              }}
+              className="flex-1 py-3 px-2 text-xs flex items-center justify-center gap-1 hover:bg-gray-100 transition-colors"
+            >
+              <span>⚙️ 직접 입력</span>
+            </button>
+          </div>
+        )}
+
+        {mode === "manual" && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span style={{ fontFamily: "'Oswald', sans-serif", fontSize: "0.8rem", color: COLOR.ink }}>
+                ✏️ 칼로리 직접 수동입력
+              </span>
+              <button
+                onClick={() => {
+                  setMode(null);
+                  setIsHalf(false);
+                }}
+                style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
+                className="py-1.5 px-1"
+              >
+                ← 뒤로
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+              <input
+                value={manualName}
+                onChange={(e) => setManualName(e.target.value)}
+                placeholder="음식 이름 (예: 엄마표 볶음밥)"
+                style={{ border: `1px solid ${COLOR.line}`, background: "white", fontSize: "16px" }}
+                className="w-full px-3 py-2"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={manualCal}
+                  onChange={(e) => setManualCal(e.target.value)}
+                  placeholder="칼로리 (kcal)"
+                  style={{ border: `1px solid ${COLOR.line}`, background: "white", fontSize: "16px" }}
+                  className="w-full px-3 py-2"
+                />
+                <button
+                  onClick={addManualEntry}
+                  disabled={!manualName.trim() || !manualCal}
+                  style={{
+                    fontFamily: "'Oswald', sans-serif",
+                    background: !manualName.trim() || !manualCal ? COLOR.inkDim : COLOR.ink,
+                    color: COLOR.paper,
+                  }}
+                  className="px-4 py-2 text-sm flex-shrink-0"
+                >
+                  등록
+                </button>
+              </div>
+            </div>
+            {/* 음식을 고른 후 체크하는 1/2 옵션 */}
+            <div className="mt-2.5 flex items-center justify-between">
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+                <input
+                  type="checkbox"
+                  checked={isHalf}
+                  onChange={(e) => setIsHalf(e.target.checked)}
+                  className="w-4 h-4 accent-amber-600 rounded"
+                />
+                <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
+                  🥣 1/2 섭취 (50% 칼로리로 계산)
+                </span>
+              </label>
+              <span style={{ fontSize: "0.7rem", color: COLOR.inkDim }}>
+                {isHalf ? "50% 적용 중" : "기본 1인분"}
+              </span>
+            </div>
           </div>
         )}
 
