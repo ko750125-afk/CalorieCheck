@@ -1253,11 +1253,11 @@ export default function CalorieJournal() {
                 {searchSuggestions.length > 0 && (
                   <div
                     style={{
-                      border: `1px solid ${COLOR.line}`,
+                      border: `2px solid ${COLOR.ink}`,
                       background: "white",
                       top: "100%",
                     }}
-                    className="absolute left-0 right-0 z-10 mt-0.5"
+                    className="absolute left-0 right-0 z-20 mt-1 shadow-xl rounded-lg overflow-hidden"
                   >
                     {searchSuggestions.map((s) => (
                       <button
@@ -1269,11 +1269,11 @@ export default function CalorieJournal() {
                           const finalName = isHalf ? `${s.name} (1/2)` : s.name;
                           setSearchResult({ name: finalName, calories: finalCal, source: "db" });
                         }}
-                        style={{ borderBottom: `1px solid ${COLOR.paperDim}` }}
-                        className="w-full flex items-center justify-between px-3 py-1.5 text-sm text-left hover:bg-gray-50"
+                        style={{ borderBottom: `1px solid ${COLOR.line}` }}
+                        className="w-full flex items-center justify-between px-4 py-3 text-base text-left hover:bg-amber-100 transition-colors"
                       >
-                        <span>{s.name}</span>
-                        <span style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>
+                        <span className="font-medium text-slate-900">{s.name}</span>
+                        <span style={{ color: COLOR.turmeric }} className="text-sm font-semibold">
                           {isHalf ? Math.round(s.cal * 0.5) : s.cal} kcal
                         </span>
                       </button>
@@ -1375,11 +1375,11 @@ export default function CalorieJournal() {
                 {logSuggestions.length > 0 && (
                   <div
                     style={{
-                      border: `1px solid ${COLOR.line}`,
+                      border: `2px solid ${COLOR.ink}`,
                       background: "white",
                       top: "100%",
                     }}
-                    className="absolute left-0 right-0 z-10 mt-0.5"
+                    className="absolute left-0 right-0 z-20 mt-1 shadow-xl rounded-lg overflow-hidden"
                   >
                     {logSuggestions.map((s) => (
                       <button
@@ -1388,11 +1388,11 @@ export default function CalorieJournal() {
                           setInput(s.name);
                           setLogSuggestions([]);
                         }}
-                        style={{ borderBottom: `1px solid ${COLOR.paperDim}` }}
-                        className="w-full flex items-center justify-between px-3 py-1.5 text-sm text-left hover:bg-gray-50"
+                        style={{ borderBottom: `1px solid ${COLOR.line}` }}
+                        className="w-full flex items-center justify-between px-4 py-3 text-base text-left hover:bg-amber-100 transition-colors"
                       >
-                        <span>{s.name}</span>
-                        <span style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>
+                        <span className="font-medium text-slate-900">{s.name}</span>
+                        <span style={{ color: COLOR.turmeric }} className="text-sm font-semibold">
                           {s.cal} kcal
                         </span>
                       </button>
