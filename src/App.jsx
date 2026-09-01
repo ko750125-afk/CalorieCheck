@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   RadialBarChart,
   RadialBar,
@@ -11,6 +11,8 @@ import {
   Tooltip,
   Cell,
   ReferenceLine,
+  PieChart,
+  Pie,
 } from "recharts";
 
 // ---------- Design tokens ----------
@@ -26,6 +28,17 @@ const COLOR = {
   brand: "#FF8E53",
 };
 
+// 🌈 음식 항목별 다채로운 파스텔 무지개 컬러 배열
+const FOOD_PALETTE = [
+  "#FFB3BA", // 핑크 마카롱
+  "#FFDFBA", // 수플레 오렌지
+  "#FFFFBA", // 레몬 크림
+  "#B5EAD7", // 아보카도 민트
+  "#C7CEEA", // 라벤더 퍼플
+  "#E2F0CB", // 말차 그린
+  "#FFC8A2", // 코랄 피치
+  "#D9E8F5", // 소다 블루
+];
 // 폰트(Oswald, Source Serif 4)는 index.html에서 <link>로 로드한다.
 
 // ---------- Local food DB (hybrid: tier 1) ----------
@@ -541,21 +554,51 @@ function Header({ todayStr, onInstallApp, onShowProfile }) {
   );
 }
 
-function HeroGauge({ total, goal }) {
+function HeroGauge({ total, goal, entries }) {
   const ratio = goal > 0 ? total / goal : 0;
   const statusColor = ratio > 1.05 ? COLOR.brick : ratio > 0.85 ? COLOR.turmeric : COLOR.olive;
   const statusLabel = ratio > 1.05 ? "목표 초과" : ratio > 0.85 ? "목표 근접" : "여유 있음";
-  const gaugeData = [{ name: "consumed", value: Math.min(ratio * 100, 100), fill: statusColor }];
+
+  let pieData = [];
+  if (!entries || entries.length === 0) {
+    pieData = [{ name: "비어있음", value: 1, fill: COLOR.paperDim }];
+  } else {
+    pieData = entries.map((e, idx) => ({
+      name: e.name,
+      value: e.calories,
+      fill: FOOD_PALETTE[idx % FOOD_PALETTE.length]
+    }));
+  }
 
   return (
     <>
       <div className="flex items-center gap-4 mb-2">
         <div style={{ width: 130, height: 130, position: "relative", flexShrink: 0 }}>
           <ResponsiveContainer>
-            <RadialBarChart innerRadius="72%" outerRadius="100%" data={gaugeData} startAngle={90} endAngle={-270}>
-              <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-              <RadialBar dataKey="value" cornerRadius={0} background={{ fill: COLOR.paperDim }} />
-            </RadialBarChart>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                innerRadius="72%"
+                outerRadius="100%"
+                startAngle={90}
+                endAngle={-270}
+                stroke="none"
+                cornerRadius={3}
+                paddingAngle={entries?.length > 1 ? 2 : 0}
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Pie>
+              {entries && entries.length > 0 && (
+                <Tooltip
+                  contentStyle={{ background: COLOR.paper, border: `1px solid ${COLOR.line}`, fontSize: "0.8rem", borderRadius: "8px", fontWeight: "600" }}
+                  itemStyle={{ color: COLOR.ink }}
+                  formatter={(value, name) => [`${value} kcal`, name]}
+                />
+              )}
+            </PieChart>
           </ResponsiveContainer>
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
             <div style={{ fontFamily: "'Jua', sans-serif", fontSize: "1.35rem", fontWeight: 700, color: COLOR.ink, lineHeight: 1.05 }}>
@@ -1056,7 +1099,7 @@ export default function CalorieJournal() {
         showRefModal={showRefModal} setShowRefModal={setShowRefModal} refSearch={refSearch} setRefSearch={setRefSearch} refCat={refCat} setRefCat={setRefCat} selectRefFood={selectRefFood}
       />
 
-      <HeroGauge total={total} goal={goal} />
+      <HeroGauge total={total} goal={goal} entries={entries} />
 
       <InputSection 
         mode={mode} setMode={setMode} isHalf={isHalf} setIsHalf={setIsHalf}
