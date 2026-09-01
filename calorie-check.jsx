@@ -29,47 +29,91 @@ const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Oswal
 
 // ---------- Local food DB (hybrid: tier 1) ----------
 const FOOD_DB = [
-  { kw: ["공기밥", "밥 한공기", "쌀밥", "흰밥"], name: "공기밥", cal: 310 },
+  // 1. 밥 / 죽류
+  { kw: ["공기밥", "밥", "쌀밥", "흰밥"], name: "공기밥", cal: 310 },
   { kw: ["현미밥"], name: "현미밥", cal: 300 },
-  { kw: ["김치찌개"], name: "김치찌개 1인분", cal: 380 },
-  { kw: ["된장찌개"], name: "된장찌개 1인분", cal: 300 },
-  { kw: ["순두부찌개"], name: "순두부찌개 1인분", cal: 320 },
-  { kw: ["부대찌개"], name: "부대찌개 1인분", cal: 550 },
-  { kw: ["삼겹살"], name: "삼겹살 200g", cal: 700 },
-  { kw: ["갈비탕"], name: "갈비탕 1그릇", cal: 480 },
-  { kw: ["설렁탕"], name: "설렁탕 1그릇", cal: 470 },
+  { kw: ["비빔밥"], name: "비빔밥", cal: 560 },
+  { kw: ["죽", "전복죽", "야채죽", "소고기죽"], name: "죽", cal: 300 },
+
+  // 2. 찌개 / 탕 / 찜 / 국류
+  { kw: ["김치찌개"], name: "김치찌개", cal: 380 },
+  { kw: ["된장찌개"], name: "된장찌개", cal: 300 },
+  { kw: ["순두부찌개"], name: "순두부찌개", cal: 320 },
+  { kw: ["부대찌개"], name: "부대찌개", cal: 550 },
+  { kw: ["갈비탕"], name: "갈비탕", cal: 480 },
+  { kw: ["설렁탕"], name: "설렁탕", cal: 470 },
   { kw: ["김치찜"], name: "김치찜", cal: 420 },
-  { kw: ["비빔밥"], name: "비빔밥 1그릇", cal: 560 },
-  { kw: ["불고기"], name: "불고기 1인분", cal: 480 },
-  { kw: ["제육볶음"], name: "제육볶음 1인분", cal: 520 },
-  { kw: ["떡볶이"], name: "떡볶이 1인분", cal: 480 },
-  { kw: ["김밥"], name: "김밥 1줄", cal: 350 },
-  { kw: ["라면"], name: "라면 1개", cal: 500 },
-  { kw: ["짜장면"], name: "짜장면 1그릇", cal: 700 },
-  { kw: ["짬뽕"], name: "짬뽕 1그릇", cal: 650 },
-  { kw: ["탕수육"], name: "탕수육 1인분", cal: 600 },
-  { kw: ["초밥", "스시"], name: "초밥 10피스", cal: 450 },
-  { kw: ["돈까스"], name: "돈까스 1인분", cal: 650 },
-  { kw: ["치킨"], name: "후라이드 치킨 3조각", cal: 700 },
-  { kw: ["피자"], name: "피자 2조각", cal: 560 },
-  { kw: ["햄버거"], name: "햄버거 1개", cal: 500 },
-  { kw: ["샐러드"], name: "샐러드 1접시", cal: 200 },
-  { kw: ["계란", "달걀"], name: "계란 1개(삶은/후라이)", cal: 80 },
-  { kw: ["두부"], name: "두부 반모", cal: 100 },
-  { kw: ["요거트"], name: "요거트 1개", cal: 120 },
-  { kw: ["바나나"], name: "바나나 1개", cal: 100 },
-  { kw: ["사과"], name: "사과 1개", cal: 95 },
-  { kw: ["우유"], name: "우유 200ml", cal: 130 },
-  { kw: ["아메리카노"], name: "아메리카노", cal: 10 },
-  { kw: ["라떼"], name: "카페라떼", cal: 180 },
-  { kw: ["빵", "식빵"], name: "식빵 2쪽", cal: 200 },
-  { kw: ["샌드위치"], name: "샌드위치 1개", cal: 400 },
-  { kw: ["과자"], name: "과자 한봉지", cal: 350 },
-  { kw: ["초콜릿"], name: "초콜릿 1개", cal: 220 },
-  { kw: ["맥주"], name: "맥주 500ml", cal: 220 },
-  { kw: ["소주"], name: "소주 1병", cal: 400 },
-  { kw: ["막걸리"], name: "막걸리 1병", cal: 350 },
-  { kw: ["아이스크림"], name: "아이스크림 1개", cal: 220 },
+  { kw: ["감자탕"], name: "감자탕", cal: 900 },
+  { kw: ["찜닭"], name: "찜닭", cal: 800 },
+  { kw: ["아구찜"], name: "아구찜", cal: 500 },
+  { kw: ["삼계탕"], name: "삼계탕", cal: 950 },
+  { kw: ["갈비찜"], name: "갈비찜", cal: 750 },
+  { kw: ["닭볶음탕", "닭도리탕"], name: "닭볶음탕", cal: 750 },
+  { kw: ["곱창전골"], name: "곱창전골", cal: 800 },
+  { kw: ["해물찜"], name: "해물찜", cal: 550 },
+  { kw: ["샤브샤브"], name: "샤브샤브", cal: 500 },
+  { kw: ["쭈꾸미", "쭈꾸미볶음"], name: "쭈꾸미", cal: 400 },
+  { kw: ["국밥", "돼지국밥", "순대국밥"], name: "국밥", cal: 650 },
+  { kw: ["해물탕"], name: "해물탕", cal: 450 },
+  { kw: ["마라탕"], name: "마라탕", cal: 850 },
+
+  // 3. 고기 / 구이류
+  { kw: ["삼겹살"], name: "삼겹살", cal: 700 },
+  { kw: ["불고기", "소불고기", "돼지불고기"], name: "불고기", cal: 480 },
+  { kw: ["제육볶음", "제육"], name: "제육볶음", cal: 520 },
+  { kw: ["탕수육"], name: "탕수육", cal: 600 },
+  { kw: ["치킨", "후라이드", "양념치킨"], name: "치킨", cal: 700 },
+  { kw: ["보쌈"], name: "보쌈", cal: 650 },
+  { kw: ["족발"], name: "족발", cal: 750 },
+  { kw: ["곱창볶음", "야채곱창"], name: "곱창볶음", cal: 600 },
+  { kw: ["갈비", "돼지갈비", "소갈비"], name: "갈비", cal: 600 },
+  { kw: ["오겹살"], name: "오겹살", cal: 700 },
+  { kw: ["우삼겹살", "우삼겹"], name: "우삼겹살", cal: 650 },
+  { kw: ["차돌박이", "차돌"], name: "차돌박이", cal: 650 },
+  { kw: ["닭발", "무뼈닭발"], name: "닭발", cal: 450 },
+
+  // 4. 면 / 분식류
+  { kw: ["떡볶이"], name: "떡볶이", cal: 480 },
+  { kw: ["김밥"], name: "김밥", cal: 350 },
+  { kw: ["라면"], name: "라면", cal: 500 },
+  { kw: ["짜장면", "자장면"], name: "짜장면", cal: 700 },
+  { kw: ["짬뽕"], name: "짬뽕", cal: 650 },
+  { kw: ["칼국수"], name: "칼국수", cal: 550 },
+  { kw: ["우동"], name: "우동", cal: 450 },
+  { kw: ["순대"], name: "순대", cal: 400 },
+  { kw: ["잔치국수", "국수"], name: "잔치국수", cal: 420 },
+  { kw: ["쌀국수"], name: "쌀국수", cal: 450 },
+  { kw: ["냉면", "물냉면", "비빔냉면"], name: "냉면", cal: 500 },
+  { kw: ["토스트"], name: "토스트", cal: 380 },
+
+  // 5. 일식 / 양식 / 패스트푸드
+  { kw: ["초밥", "스시"], name: "초밥", cal: 450 },
+  { kw: ["돈까스", "돈가스"], name: "돈까스", cal: 650 },
+  { kw: ["피자"], name: "피자", cal: 560 },
+  { kw: ["햄버거", "버거"], name: "햄버거", cal: 500 },
+  { kw: ["샌드위치"], name: "샌드위치", cal: 400 },
+  { kw: ["타꼬야키", "타코야끼"], name: "타꼬야키", cal: 320 },
+  { kw: ["파스타"], name: "파스타", cal: 600 },
+  { kw: ["스파게티"], name: "스파게티", cal: 600 },
+
+  // 6. 다이어트 / 과일 / 간식류
+  { kw: ["과일", "사과", "배", "포도", "귤", "복숭아", "감"], name: "과일", cal: 150 },
+  { kw: ["샐러드"], name: "샐러드", cal: 200 },
+  { kw: ["계란", "달걀", "삶은계란"], name: "계란", cal: 80 },
+  { kw: ["두부"], name: "두부", cal: 100 },
+  { kw: ["빵", "식빵"], name: "식빵", cal: 200 },
+  { kw: ["과자", "스낵"], name: "과자", cal: 350 },
+  { kw: ["초콜릿"], name: "초콜릿", cal: 220 },
+  { kw: ["아이스크림"], name: "아이스크림", cal: 220 },
+
+  // 7. 음료류
+  { kw: ["쥬스", "주스", "과일주스"], name: "쥬스", cal: 160 },
+  { kw: ["식혜"], name: "식혜", cal: 180 },
+  { kw: ["요거트", "플레인요거트"], name: "요거트", cal: 120 },
+  { kw: ["요구르트"], name: "요구르트", cal: 70 },
+  { kw: ["콜라"], name: "콜라", cal: 150 },
+  { kw: ["사이다"], name: "사이다", cal: 150 },
+  { kw: ["음료수", "음료"], name: "음료수", cal: 140 },
 ];
 
 function matchLocalFood(text) {
@@ -339,6 +383,7 @@ function generateDummyDayEntries(dateStr, seed) {
 
 export default function CalorieJournal() {
   const [selectedDate, setSelectedDate] = useState(todayStr());
+  const [isHalf, setIsHalf] = useState(false);
   const [profile, setProfile] = useState(null);
   const [profileDraft, setProfileDraft] = useState(DEFAULT_PROFILE);
   const [showProfileForm, setShowProfileForm] = useState(false);
@@ -446,6 +491,13 @@ export default function CalorieJournal() {
     if (!result) {
       result = await estimateWithAI(searchText);
     }
+    if (isHalf) {
+      result = {
+        ...result,
+        name: `${result.name} (1/2량)`,
+        calories: Math.round(result.calories * 0.5),
+      };
+    }
     setSearchResult(result);
     setSearchLoading(false);
   }
@@ -457,11 +509,17 @@ export default function CalorieJournal() {
     if (!result) {
       result = await estimateWithAI(input);
     }
+    let finalCal = result.calories;
+    let finalName = result.name;
+    if (isHalf) {
+      finalCal = Math.round(finalCal * 0.5);
+      finalName = `${finalName} (1/2량)`;
+    }
     const now = new Date();
     const entry = {
       id: Date.now(),
-      name: result.name,
-      calories: result.calories,
+      name: finalName,
+      calories: finalCal,
       meal: getAutoMeal(now),
       source: result.source,
       time: now.toLocaleTimeString("ko-KR", {
@@ -858,14 +916,16 @@ export default function CalorieJournal() {
                         onClick={() => {
                           setSearchText(s.name);
                           setSearchSuggestions([]);
-                          setSearchResult({ name: s.name, calories: s.cal, source: "db" });
+                          const finalCal = isHalf ? Math.round(s.cal * 0.5) : s.cal;
+                          const finalName = isHalf ? `${s.name} (1/2량)` : s.name;
+                          setSearchResult({ name: finalName, calories: finalCal, source: "db" });
                         }}
                         style={{ borderBottom: `1px solid ${COLOR.paperDim}` }}
                         className="w-full flex items-center justify-between px-3 py-1.5 text-sm text-left hover:bg-gray-50"
                       >
                         <span>{s.name}</span>
                         <span style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}>
-                          {s.cal} kcal
+                          {isHalf ? Math.round(s.cal * 0.5) : s.cal} kcal
                         </span>
                       </button>
                     ))}
@@ -884,6 +944,19 @@ export default function CalorieJournal() {
               >
                 {searchLoading ? "확인 중…" : "검색"}
               </button>
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+                <input
+                  type="checkbox"
+                  checked={isHalf}
+                  onChange={(e) => setIsHalf(e.target.checked)}
+                  className="w-4 h-4 accent-amber-600 rounded"
+                />
+                <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
+                  🥣 1/2량 섭취 (50% 칼로리로 계산)
+                </span>
+              </label>
             </div>
             {searchResult && (
               <div
@@ -983,6 +1056,19 @@ export default function CalorieJournal() {
               >
                 {loading ? "계산 중…" : "추가"}
               </button>
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+                <input
+                  type="checkbox"
+                  checked={isHalf}
+                  onChange={(e) => setIsHalf(e.target.checked)}
+                  className="w-4 h-4 accent-amber-600 rounded"
+                />
+                <span style={{ color: isHalf ? COLOR.brick : COLOR.inkDim, fontWeight: isHalf ? 600 : 400 }}>
+                  🥣 1/2량 섭취 (50% 칼로리로 계산)
+                </span>
+              </label>
             </div>
           </div>
         )}
