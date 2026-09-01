@@ -257,10 +257,10 @@ function getAutoMeal(date = new Date()) {
 }
 
 const ACTIVITY_LEVELS = [
-  { value: "sedentary", label: "거의 안함", mult: 1.2 },
-  { value: "light", label: "가벼운 활동", mult: 1.375 },
-  { value: "moderate", label: "보통 활동", mult: 1.55 },
-  { value: "active", label: "활발한 활동", mult: 1.725 },
+  { value: "sedentary", label: "거의 안함 (x1.2)", mult: 1.2, desc: "BMR x 1.2" },
+  { value: "light", label: "가벼운 활동 (x1.375)", mult: 1.375, desc: "BMR x 1.375" },
+  { value: "moderate", label: "보통 활동 (x1.55)", mult: 1.55, desc: "BMR x 1.55" },
+  { value: "active", label: "활발한 활동 (x1.725)", mult: 1.725, desc: "BMR x 1.725" },
 ];
 
 const DEFAULT_PROFILE = {
@@ -296,32 +296,38 @@ function calcGoalCalories(profile) {
     tw = Number(targetWeight);
   if (!a || !h || !w || !tw) return null;
 
-  const bmr =
-    gender === "male" ? 10 * w + 6.25 * h - 5 * a + 5 : 10 * w + 6.25 * h - 5 * a - 161;
-  const activityMult =
-    ACTIVITY_LEVELS.find((l) => l.value === activity)?.mult || 1.375;
-  const tdee = bmr * activityMult;
+  const bmr = Math.round(
+    gender === "male" ? 10 * w + 6.25 * h - 5 * a + 5 : 10 * w + 6.25 * h - 5 * a - 161
+  );
+  const activityLevelObj = ACTIVITY_LEVELS.find((l) => l.value === activity) || ACTIVITY_LEVELS[1];
+  const activityMult = activityLevelObj.mult;
+  const activityLabel = activityLevelObj.label;
+  const tdee = Math.round(bmr * activityMult);
 
   const diff = tw - w; // 목표체중 - 현재체중
   let goalCal;
   let mode;
+  let adjustment = 0;
+
   if (diff <= -0.5) {
-    goalCal = tdee - 500; // 감량
+    adjustment = -500;
+    goalCal = tdee + adjustment; // 감량
     mode = "감량";
   } else if (diff >= 0.5) {
-    goalCal = tdee + 300; // 증량
+    adjustment = +300;
+    goalCal = tdee + adjustment; // 증량
     mode = "증량";
   } else {
+    adjustment = 0;
     goalCal = tdee; // 유지
     mode = "유지";
   }
 
   const minCal = gender === "male" ? 1500 : 1200;
   goalCal = Math.max(minCal, Math.round(goalCal));
-
   const weeks = Math.abs(diff) >= 0.5 ? Math.ceil(Math.abs(diff) / 0.45) : 0;
 
-  return { goalCal, mode, tdee: Math.round(tdee), diff, weeks };
+  return { goalCal, mode, bmr, activityMult, activityLabel, tdee, adjustment, diff, weeks };
 }
 
 const DUMMY_PROFILE = {
@@ -585,48 +591,84 @@ export default function CalorieJournal() {
       {/* Profile & BMI card */}
       <div style={{ borderBottom: `1px solid ${COLOR.line}` }} className="pb-4 mb-5">
         {!showProfileForm ? (
-          <div className="flex items-start justify-between gap-2 text-sm">
-            {profile ? (
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 mb-1">
-                  <span>
-                    <span style={{ color: COLOR.inkDim }}>키/체중 </span>
-                    {profile.height}cm · {profile.currentWeight}kg
-                  </span>
-                  <span>
-                    <span style={{ color: COLOR.inkDim }}>BMI </span>
-                    <span style={{ color: bmiCat.color, fontWeight: 600 }}>
-                      {bmi ? bmi.toFixed(1) : "-"} {bmiCat.label}
-                    </span>
-                  </span>
+          <div className="text-sm">
+            {profile && goalInfo ? (
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 mb-1">
+                      <span>
+                        <span style={{ color: COLOR.inkDim }}>신체 </span>
+                        {profile.gender === "male" ? "남성" : "여성"} {profile.age}세 · {profile.height}cm · {profile.currentWeight}kg
+                      </span>
+                      <span>
+                        <span style={{ color: COLOR.inkDim }}>BMI </span>
+                        <span style={{ color: bmiCat.color, fontWeight: 600 }}>
+                          {bmi ? bmi.toFixed(1) : "-"} {bmiCat.label}
+                        </span>
+                      </span>
+                    </div>
+                    <div style={{ color: COLOR.inkDim, fontSize: "0.8rem" }}>
+                      목표 {profile.targetWeight}kg ({goalInfo.mode})
+                      {goalInfo.weeks > 0 && <> · 약 {goalInfo.weeks}주 소요 예상</>}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div
+                      style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700 }}
+                      className="text-lg"
+                    >
+                      {goal.toLocaleString()} kcal
+                    </div>
+                    <button
+                      onClick={() => setShowProfileForm(true)}
+                      style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
+                      className="py-1"
+                    >
+                      프로필 수정 ✎
+                    </button>
+                  </div>
                 </div>
-                <div style={{ color: COLOR.inkDim, fontSize: "0.8rem" }}>
-                  목표체중 {profile.targetWeight}kg
-                  {goalInfo && goalInfo.weeks > 0 && (
-                    <> · 약 {goalInfo.weeks}주 {goalInfo.mode} 계획</>
-                  )}
+
+                {/* 활동량 및 칼로리 수치 산출 내역 박스 */}
+                <div
+                  style={{ border: `1px solid ${COLOR.line}`, background: COLOR.paperDim }}
+                  className="p-2.5 mt-2 rounded text-xs grid grid-cols-2 md:grid-cols-4 gap-2 text-center"
+                >
+                  <div>
+                    <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>기초대사량 (BMR)</div>
+                    <div className="font-semibold">{goalInfo.bmr.toLocaleString()} kcal</div>
+                  </div>
+                  <div>
+                    <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동 계수 (선택)</div>
+                    <div className="font-semibold text-amber-700">x {goalInfo.activityMult}배</div>
+                  </div>
+                  <div>
+                    <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>활동소비 (TDEE)</div>
+                    <div className="font-semibold">{goalInfo.tdee.toLocaleString()} kcal</div>
+                  </div>
+                  <div>
+                    <div style={{ color: COLOR.inkDim, fontSize: "0.65rem" }}>최종 목표 칼로리</div>
+                    <div className="font-semibold text-emerald-700">
+                      {goalInfo.goalCal.toLocaleString()} kcal ({goalInfo.adjustment >= 0 ? `+${goalInfo.adjustment}` : goalInfo.adjustment})
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (
-              <span style={{ color: COLOR.inkDim }}>
-                프로필을 입력하면 목표 칼로리가 자동 계산됩니다
-              </span>
-            )}
-            <div className="text-right flex-shrink-0">
-              <div
-                style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700 }}
-                className="text-lg"
-              >
-                {goal.toLocaleString()} kcal
+              <div className="flex items-center justify-between">
+                <span style={{ color: COLOR.inkDim }}>
+                  프로필을 입력하면 BMR 및 활동량에 따른 목표 칼로리가 자동 계산됩니다
+                </span>
+                <button
+                  onClick={() => setShowProfileForm(true)}
+                  style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
+                  className="py-1.5 px-2 border"
+                >
+                  프로필 입력하기 ✎
+                </button>
               </div>
-              <button
-                onClick={() => setShowProfileForm(true)}
-                style={{ color: COLOR.inkDim, fontSize: "0.75rem" }}
-                className="py-1.5"
-              >
-                프로필 {profile ? "수정" : "입력하기"} ✎
-              </button>
-            </div>
+            )}
           </div>
         ) : (
           <div className="text-sm">
@@ -690,7 +732,7 @@ export default function CalorieJournal() {
               ))}
             </div>
 
-            <span style={{ color: COLOR.inkDim, fontSize: "0.7rem" }}>활동량</span>
+            <span style={{ color: COLOR.inkDim, fontSize: "0.7rem" }}>활동량 선택 (활동 계수 반영)</span>
             <div className="flex flex-wrap gap-2 mt-1 mb-3">
               {ACTIVITY_LEVELS.map((a) => (
                 <button
@@ -705,12 +747,32 @@ export default function CalorieJournal() {
                     background: profileDraft.activity === a.value ? COLOR.ink : "transparent",
                     color: profileDraft.activity === a.value ? COLOR.paper : COLOR.inkDim,
                   }}
-                  className="px-2 py-1"
+                  className="px-2.5 py-1"
                 >
                   {a.label}
                 </button>
               ))}
             </div>
+
+            {/* 실시간 계산되는 수치 미리보기 박스 */}
+            {(() => {
+              const draftCalc = calcGoalCalories(profileDraft);
+              if (!draftCalc) return null;
+              return (
+                <div
+                  style={{ border: `1px dashed ${COLOR.line}`, background: "#F8F9FA" }}
+                  className="p-2.5 mb-3 text-xs rounded"
+                >
+                  <div className="font-semibold mb-1 text-slate-700">📊 수치 계산 결과 미리보기:</div>
+                  <div className="grid grid-cols-2 gap-1 text-slate-600">
+                    <div>기초대사량(BMR): <b>{draftCalc.bmr.toLocaleString()} kcal</b></div>
+                    <div>활동계수 배율: <b className="text-amber-600">x {draftCalc.activityMult}배</b></div>
+                    <div>일일소비(TDEE): <b>{draftCalc.tdee.toLocaleString()} kcal</b></div>
+                    <div>목표 칼로리: <b className="text-emerald-600">{draftCalc.goalCal.toLocaleString()} kcal</b> ({draftCalc.adjustment >= 0 ? `+${draftCalc.adjustment}` : draftCalc.adjustment})</div>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="flex items-center gap-2">
               <button
@@ -720,7 +782,7 @@ export default function CalorieJournal() {
                   background: COLOR.ink,
                   color: COLOR.paper,
                 }}
-                className="px-4 py-1.5 text-xs"
+                className="px-4 py-1.5 text-xs font-medium"
               >
                 저장하고 목표 계산
               </button>
