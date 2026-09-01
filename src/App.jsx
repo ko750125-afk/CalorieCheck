@@ -472,26 +472,7 @@ export default function CalorieJournal() {
     }
   }
 
-  async function fillDummyData() {
-    setLoading(true);
-    try {
-      if (!profile) {
-        localStorage.setItem("profile", JSON.stringify(DUMMY_PROFILE));
-        setProfile(DUMMY_PROFILE);
-        setProfileDraft(DUMMY_PROFILE);
-        setShowProfileForm(false);
-      }
-      for (let i = 6; i >= 0; i--) {
-        const ds = dateStrOffset(i);
-        const dayEntries = generateDummyDayEntries(ds, i + 1);
-        localStorage.setItem(`foodlog:${ds}`, JSON.stringify(dayEntries));
-      }
-      await Promise.all([loadToday(), loadWeekly()]);
-    } catch {
-      // dummy data generation best-effort only
-    }
-    setLoading(false);
-  }
+
 
   async function doSearch() {
     if (!searchText.trim() || searchLoading) return;
@@ -604,14 +585,6 @@ export default function CalorieJournal() {
         </h1>
         <div className="flex items-center justify-between mt-1">
           <span style={{ color: COLOR.inkDim, fontSize: "0.85rem" }}>{todayStr()}</span>
-          <button
-            onClick={fillDummyData}
-            disabled={loading}
-            style={{ color: COLOR.inkDim, fontSize: "0.75rem", textDecoration: "underline" }}
-            className="py-1"
-          >
-            샘플 데이터 채우기
-          </button>
         </div>
       </div>
       <div style={{ borderBottom: `1px solid ${COLOR.line}` }} className="mb-5" />
