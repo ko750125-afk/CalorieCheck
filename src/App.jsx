@@ -1062,9 +1062,11 @@ export default function CalorieJournal() {
           </div>
         </div>
       </div>
-      <div style={{ color: COLOR.inkDim, fontSize: "0.7rem" }} className="mb-6">
-        오늘 섭취 {total.toLocaleString()}kcal ÷ 목표 {goal.toLocaleString()}kcal 기준 · 85%
-        미만 여유있음 · 85~105% 목표 근접 · 105% 초과 시 초과
+      <div style={{ color: COLOR.inkDim, fontSize: "0.75rem", lineHeight: 1.5 }} className="mb-6">
+        <div>오늘 섭취 {total.toLocaleString()}kcal ÷ 목표 {goal.toLocaleString()}kcal 기준</div>
+        <div style={{ fontSize: "0.7rem", opacity: 0.85 }} className="mt-0.5">
+          · 85% 미만 여유있음 · 85~105% 목표 근접 · 105% 초과 시 초과
+        </div>
       </div>
 
       {/* Input Mode Selector */}
