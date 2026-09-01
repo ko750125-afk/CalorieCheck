@@ -777,10 +777,24 @@ export default function CalorieJournal() {
         미만 여유있음 · 85~105% 목표 근접 · 105% 초과 시 초과
       </div>
 
-      {/* Input */}
+      {/* Input Mode Selector */}
       <div style={{ borderTop: `1px solid ${COLOR.line}`, borderBottom: `1px solid ${COLOR.line}` }} className="py-4 mb-6">
         {mode === null && (
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {/* 주 메인 버튼 (Primary CTA) */}
+            <button
+              onClick={() => setMode("log")}
+              style={{
+                fontFamily: "'Oswald', sans-serif",
+                background: COLOR.ink,
+                color: COLOR.paper,
+              }}
+              className="flex-[2.5] py-3 px-4 text-sm font-medium flex items-center justify-center gap-1.5 hover:opacity-90"
+            >
+              <span>✏️ 오늘 먹은 음식 기록하기</span>
+            </button>
+
+            {/* 보조 버튼 (Secondary Ghost Button) */}
             <button
               onClick={() => {
                 setMode("search");
@@ -790,22 +804,12 @@ export default function CalorieJournal() {
               style={{
                 fontFamily: "'Oswald', sans-serif",
                 border: `1px solid ${COLOR.line}`,
-                background: "white",
+                background: COLOR.paperDim,
+                color: COLOR.inkDim,
               }}
-              className="flex-1 py-3 text-sm"
+              className="flex-1 py-3 px-2 text-xs flex items-center justify-center gap-1 hover:bg-gray-200 transition-colors"
             >
-              뭘 먹을까? <span style={{ color: COLOR.inkDim, fontSize: "0.7rem" }}>(칼로리만 확인)</span>
-            </button>
-            <button
-              onClick={() => setMode("log")}
-              style={{
-                fontFamily: "'Oswald', sans-serif",
-                background: COLOR.ink,
-                color: COLOR.paper,
-              }}
-              className="flex-1 py-3 text-sm"
-            >
-              뭘 먹었니? <span style={{ color: COLOR.paperDim, fontSize: "0.7rem" }}>(기록하기)</span>
+              <span>🔍 단순 검색</span>
             </button>
           </div>
         )}
