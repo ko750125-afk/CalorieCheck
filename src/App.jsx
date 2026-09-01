@@ -628,7 +628,7 @@ export default function CalorieJournal() {
           }}
           className="text-2xl font-semibold"
         >
-          고선우 몸매 관리앱
+          Calorie Diary
         </h1>
         <div className="flex items-center justify-between mt-1">
           <span style={{ color: COLOR.inkDim, fontSize: "0.85rem" }}>{todayStr()}</span>
